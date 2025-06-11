@@ -13,7 +13,8 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class OrderManagementService {
+public class OrderManagementService
+{
     private static final Logger log = LoggerFactory.getLogger(OrderManagementService.class);
     private static int countOfOrders = 0;
     @Autowired
@@ -25,12 +26,14 @@ public class OrderManagementService {
         disruptorService.start("OrderManagementService", orderEventHandler);
     }
     @PreDestroy
-    public void shutdown() {
+    public void shutdown()
+    {
         log.info("Shutting down OrderManagementService. Total orders processed: {}", countOfOrders);
         disruptorService.stop();
     }
 
-    public void processOrder(Order order) {
+    public void processOrder(Order order)
+    {
         String errorId = UUID.randomUUID().toString();
         MDC.put("errorId", errorId);
         try {
@@ -45,7 +48,8 @@ public class OrderManagementService {
         }
     }
 
-    private static boolean isValidOrder(Order order) {
+    private static boolean isValidOrder(Order order)
+    {
         if (order.getQuantity() <= 0)
             return false;
         if (order.getPrice() <= 0)

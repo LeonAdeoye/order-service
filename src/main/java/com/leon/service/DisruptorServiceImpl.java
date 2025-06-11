@@ -14,7 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class DisruptorServiceImpl implements DisruptorService {
+public class DisruptorServiceImpl implements DisruptorService
+{
     private static final Logger logger = LoggerFactory.getLogger(DisruptorServiceImpl.class);
     private int counter;
     private String name;
@@ -24,7 +25,8 @@ public class DisruptorServiceImpl implements DisruptorService {
     private int bufferSize;
 
     @Override
-    public void start(String name, EventHandler<OrderEvent> actionEventHandler) {
+    public void start(String name, EventHandler<OrderEvent> actionEventHandler)
+    {
         this.name = name;
         counter = 0;
         OrderEventFactory factory = new OrderEventFactory();
@@ -38,7 +40,8 @@ public class DisruptorServiceImpl implements DisruptorService {
     }
 
     @Override
-    public void stop() {
+    public void stop()
+    {
         logger.info(counter + " events were processed by " + name + " disruptor");
         disruptor.halt();
         logger.info("Halted " + name + " disruptor");
@@ -47,7 +50,8 @@ public class DisruptorServiceImpl implements DisruptorService {
     }
 
     @Override
-    public void push(Order order) {
+    public void push(Order order)
+    {
         producer.onData(order);
         counter++;
     }

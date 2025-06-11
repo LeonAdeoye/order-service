@@ -11,13 +11,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
-public class CurrencyManager {
+public class CurrencyService
+{
     private static final String FX_URL = "https://openexchangerates.org/api/latest.json?app_id=0d1601b10ca0490b960214675c968c6f";
     private final Map<String, Double> exchangeRates = new ConcurrentHashMap<>();
 
     @PostConstruct
-    public void loadExchangeRates() {
-        try {
+    public void loadExchangeRates()
+    {
+        try
+        {
             RestTemplate restTemplate = new RestTemplate();
             String response = restTemplate.getForObject(FX_URL, String.class);
             ObjectMapper mapper = new ObjectMapper();
@@ -25,12 +28,15 @@ public class CurrencyManager {
             JsonNode rates = root.get("rates");
             rates.fieldNames().forEachRemaining(code -> exchangeRates.put(code, rates.get(code).asDouble()));
             log.info("Exchange rates loaded.");
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log.error("Failed to load exchange rates", e);
         }
     }
 
-    public double getExchangeRate(String currency) {
+    public double getExchangeRate(String currency)
+    {
         return exchangeRates.getOrDefault(currency, 1.0);
     }
 } 
