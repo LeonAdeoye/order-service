@@ -4,6 +4,7 @@ public enum OrderStates {
     NEW("New Order"),
     PENDING_NEW("Pending New Order"),
     NEW_ACK("New Order Acknowledged"),
+    REJECTED_BY_OMS("Rejected By OMS"),
     ACCEPTED_BY_DESK("Accepted By Desk"),
     REJECTED_BY_DESK("Rejected By Desk"),
     SENT_TO_EXCHANGE("Sent to Exchange"),
