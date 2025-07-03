@@ -1,27 +1,28 @@
 package com.leon.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import com.leon.model.OrderStateEvents;
+import com.leon.model.OrderStates;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.statemachine.config.EnableStateMachine;
+import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
+import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
+import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 
-@Component
-public class OrderFiniteStateMachineService
-{
-    @Autowired
-    private CurrencyService currencyService;
-    public void newOrder()
-    {
-        // This method would typically be used to initialize a new order state machine
-        // For example, setting up the initial state, validating inputs, etc.
-        // Here we can just log or perform any necessary setup.
-        System.out.println("New order state machine initialized.");
+import java.util.EnumSet;
+
+@Configuration
+@EnableStateMachine
+public class OrderFiniteStateMachineService extends EnumStateMachineConfigurerAdapter<OrderStates, OrderStateEvents> {
+
+    @Override
+    public void configure(StateMachineStateConfigurer<OrderStates, OrderStateEvents> states) throws Exception {
+        states.withStates().initial(OrderStates.NEW).states(EnumSet.allOf(OrderStates.class));
     }
 
-    public void processOrder(String orderId)
-    {
-        // This method would typically handle the processing of an order
-        // For example, transitioning states, validating conditions, etc.
-        // Here we can just log or perform any necessary processing.
-        System.out.println("Processing order with ID: " + orderId);
+    @Override
+    public void configure(StateMachineTransitionConfigurer<OrderStates, OrderStateEvents> transitions) throws Exception {
+        transitions.withExternal()
+            .source(OrderStates.NEW).target(OrderStates.NEW_ACK)
+            .event(OrderStateEvents.SUBMIT_TO_DESK);
     }
-
 }

@@ -1,6 +1,6 @@
 package com.leon.model;
 
-public enum OrderStateEvent {
+public enum OrderStateEvents {
     SUBMIT_TO_DESK("Submit To desk"),
     OMS_ACCEPT("OMS Accept"),
     OMS_REJECT("OMS Reject"),
@@ -12,7 +12,7 @@ public enum OrderStateEvent {
 
     private final String orderStateEventDescription;
 
-    OrderStateEvent(String orderStateEventDescription)
+    OrderStateEvents(String orderStateEventDescription)
     {
         this.orderStateEventDescription = orderStateEventDescription;
     }

@@ -1,6 +1,6 @@
 package com.leon.model;
 
-public enum OrderState {
+public enum OrderStates {
     NEW("New Order"),
     PENDING_NEW("Pending New Order"),
     NEW_ACK("New Order Acknowledged"),
@@ -12,7 +12,7 @@ public enum OrderState {
 
     private final String orderStateDescription;
 
-    OrderState(String orderStateDescription)
+    OrderStates(String orderStateDescription)
     {
         this.orderStateDescription = orderStateDescription;
     }
