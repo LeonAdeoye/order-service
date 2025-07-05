@@ -1,7 +1,7 @@
 package com.leon.model;
 
 public enum OrderStates {
-    NEW("New Order"),
+    NEW_ORDER("New Order"),
     PENDING_NEW("Pending New Order"),
     NEW_ACK("New Order Acknowledged"),
     REJECTED_BY_OMS("Rejected By OMS"),

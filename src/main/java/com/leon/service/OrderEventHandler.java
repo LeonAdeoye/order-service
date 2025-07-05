@@ -3,6 +3,7 @@ package com.leon.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.leon.messaging.AmpsMessageOutboundProcessor;
+import com.leon.model.OrderStateEvents;
 import com.lmax.disruptor.EventHandler;
 import com.leon.model.Order;
 import com.leon.model.OrderEvent;
@@ -19,7 +20,7 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
 {
     private static final Logger log = LoggerFactory.getLogger(OrderEventHandler.class);
     @Autowired
-    private OrderRepository orderRepository;
+    private OrderService orderService;
     @Autowired
     private AmpsMessageOutboundProcessor ampsMessageOutboundProcessor;
     @Autowired
@@ -44,6 +45,17 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
 
     private void processOrder(Order order)
     {
-        log.info("Order processed: {}", order.getOrderId());
+        switch(order.getState())
+        {
+            case NEW_ORDER:
+                log.info("New order received: {}", order.getOrderId());
+                orderService.saveOrder(order);
+                orderFiniteStateMachineService.sendEvent(order.getOrderId(), OrderStateEvents.SUBMIT_TO_DESK);
+                ampsMessageOutboundProcessor.sendOrderEvent(order);
+                break;
+            default:
+                log.warn("Order state not handled: {}", order.getState());
+                break;
+        }
     }
 } 

@@ -17,7 +17,6 @@ public class OrderServiceImpl implements OrderService
     @Autowired
     private OrderRepository orderRepository;
     private final Executor dbTaskExecutor;
-
     @Autowired
     private OrderCache orderCache;
 
@@ -25,7 +24,8 @@ public class OrderServiceImpl implements OrderService
     public Optional<Order> getOrderById(String orderId)
     {
         return Optional.ofNullable(orderCache.getOrder(orderId))
-            .or(() -> {
+            .or(() ->
+            {
                 logger.info("Order not found in cache, fetching from database: {}", orderId);
                 return orderRepository.findById(orderId);
             });
@@ -34,6 +34,7 @@ public class OrderServiceImpl implements OrderService
     @Override
     public void saveOrder(Order orderToSave)
     {
+        orderCache.addOrder(orderToSave);
         dbTaskExecutor.execute(() -> orderRepository.save(orderToSave));
     }
 }

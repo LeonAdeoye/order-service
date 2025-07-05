@@ -17,28 +17,35 @@ public class AmpsMessageOutboundProcessor
     private String ampsServerUrl;
     @Value("${amps.client.name}")
     private String ampsClientName;
-    @Value("${orders.outgoing}")
-    private String ordersOutgoingTopic;
+    @Value("${amps.topic.order.outbound}")
+    private String ordersOutboundTopic;
 
     @PostConstruct
-    public void initialize() throws Exception {
-        try {
+    public void initialize() throws Exception
+    {
+        try
+        {
             ampsClient = new Client(ampsClientName);
             ampsClient.connect(ampsServerUrl);
             ampsClient.logon();
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log.error("ERR-901: Failed to initialize AMPS client for AmpsOutboundProcessor", e);
             throw e;
         }
     }
 
-    public void sendOrderEvent(Order order) {
-        try {
-            ampsClient.publish(ordersOutgoingTopic, order.toString());
+    public void sendOrderEvent(Order order)
+    {
+        try
+        {
+            ampsClient.publish(ordersOutboundTopic, order.toJSON());
             log.info("Published order message: {}", order);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log.error("ERR-902: Failed to publish order message: {}", order, e);
         }
     }
-
 }

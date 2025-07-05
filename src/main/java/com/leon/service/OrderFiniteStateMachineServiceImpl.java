@@ -20,7 +20,9 @@ public class OrderFiniteStateMachineServiceImpl implements OrderFiniteStateMachi
     @Override
     public void sendEvent(String orderId, OrderStateEvents event)
     {
-        stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(event).setHeader("orderId", orderId).build()))
-            .subscribe(result -> logger.info("Event {} sent for order {} with result {}", event, orderId, result.getResultType()));
+        stateMachine.getExtendedState().getVariables().put("orderId", orderId);
+
+        stateMachine.sendEvent(Mono.just(MessageBuilder.withPayload(event).build()))
+            .subscribe(result -> logger.info("Event {} sent for order Id {} with result {}", event, orderId, result.getResultType()));
     }
 }

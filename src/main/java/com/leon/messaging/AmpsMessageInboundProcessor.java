@@ -12,23 +12,20 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
 public class AmpsMessageInboundProcessor implements MessageHandler {
     private static final Logger log = LoggerFactory.getLogger(AmpsMessageInboundProcessor.class);
-
     @Value("${amps.server.url}")
     private String ampsServerUrl;
     @Value("${amps.client.name}")
     private String ampsClientName;
-    @Value("${amps.topic.orders}")
-    private String ordersTopic;
+    @Value("${amps.topic.order.inbound}")
+    private String ordersInboundTopic;
     @Autowired
     private final OrderManagementService orderManagementService;
     @Autowired
@@ -38,29 +35,34 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
     private Client ampsClient;
 
     @PostConstruct
-    public void initialize() throws Exception {
-        try {
+    public void initialize() throws Exception
+    {
+        try
+        {
             ampsClient = new Client(ampsClientName);
             ampsClient.connect(ampsServerUrl);
             ampsClient.logon();
-            for(Message message : (ampsClient.subscribe(ordersTopic))) {
+            for(Message message : (ampsClient.subscribe(ordersInboundTopic)))
+            {
                 invoke(message);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log.error("ERR-007: Failed to initialize AMPS client", e);
             throw e;
         }
     }
 
     @Override
-    public void invoke(Message message) {
-        String errorId = UUID.randomUUID().toString();
-        MDC.put("errorId", errorId);
-
-        try {
+    public void invoke(Message message)
+    {
+        try
+        {
             ValidationResult validationResult = messageValidator.validateMessage(message.getData());
 
-            if (!validationResult.valid()) {
+            if (!validationResult.valid())
+            {
                 log.error("ERR-008: Invalid message received: {}", validationResult.errorMessage());
                 return;
             }
@@ -69,10 +71,10 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
             log.info("Received valid order message: {}", order);
             orderManagementService.processOrder(order);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log.error("ERR-009: Failed to process message", e);
-        } finally {
-            MDC.remove("errorId");
         }
     }
 } 

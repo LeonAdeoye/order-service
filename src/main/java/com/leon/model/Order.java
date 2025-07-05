@@ -1,9 +1,14 @@
 package com.leon.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leon.messaging.AmpsMessageOutboundProcessor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -14,6 +19,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "orders")
 public class Order
 {
+    private static final Logger log = LoggerFactory.getLogger(Order.class);
+
     @Id
     private String orderId;
     private String instrumentCode;
@@ -66,4 +73,18 @@ public class Order
     private double performanceVsArrivalBPS;
     private double performanceVsIVWAP;
     private double performanceVsIVWAPBPS;
-} 
+
+    public String toJSON()
+    {
+        try
+        {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(this);
+        }
+        catch (JsonProcessingException e)
+        {
+            log.error("Failed to convert Order to JSON: {}", this, e);
+            throw new RuntimeException("Failed to convert Order to JSON", e);
+        }
+    }
+}

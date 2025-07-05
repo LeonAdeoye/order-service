@@ -5,7 +5,8 @@ import com.leon.model.OrderStates;
 
 import java.util.Optional;
 
-public interface OrderService {
+public interface OrderService
+{
     void saveOrder(Order orderToSave);
     Optional<Order> getOrderById(String orderId);
 }

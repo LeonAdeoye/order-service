@@ -19,44 +19,50 @@ import java.util.EnumSet;
 @EnableStateMachine
 public class OrderFiniteStateMachineConfiguration extends StateMachineConfigurerAdapter<OrderStates, OrderStateEvents>
 {
-    private static final Logger logger = LoggerFactory.getLogger(DisruptorServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderFiniteStateMachineConfiguration.class);
     @Autowired
     private OrderService orderService;
     @Override
-    public void configure(StateMachineStateConfigurer<OrderStates, OrderStateEvents> states) throws Exception {
-        states.withStates().initial(OrderStates.NEW).states(EnumSet.allOf(OrderStates.class));
+    public void configure(StateMachineStateConfigurer<OrderStates, OrderStateEvents> states) throws Exception
+    {
+        states.withStates().initial(OrderStates.NEW_ORDER).states(EnumSet.allOf(OrderStates.class));
     }
 
     @Override
-    public void configure(StateMachineConfigurationConfigurer<OrderStates, OrderStateEvents> config) throws Exception {
+    public void configure(StateMachineConfigurationConfigurer<OrderStates, OrderStateEvents> config) throws Exception
+    {
         config.withConfiguration().autoStartup(true);
     }
 
     @Bean
-    public Action<OrderStates, OrderStateEvents> updateOrderStateAction() {
-        return context -> {
+    public Action<OrderStates, OrderStateEvents> orderStateAction()
+    {
+        return context ->
+        {
             String orderId = (String) context.getExtendedState().getVariables().get("orderId");
             OrderStates newState = context.getTarget().getId();
 
             logger.info("Order {} transitioned to {} because of event {}", orderId, newState, context.getEvent());
 
-            orderService.getOrderById(orderId).ifPresent(order -> {
+            orderService.getOrderById(orderId).ifPresent(order ->
+            {
                 order.setState(newState);
                 orderService.saveOrder(order);
             });
         };
     }
 
-    @Override
-    public void configure(StateMachineTransitionConfigurer<OrderStates, OrderStateEvents> transitions) throws Exception {
+   @Override
+    public void configure(StateMachineTransitionConfigurer<OrderStates, OrderStateEvents> transitions) throws Exception
+   {
         transitions.withExternal()
-            .source(OrderStates.NEW).target(OrderStates.PENDING_NEW).event(OrderStateEvents.SUBMIT_TO_DESK).action(updateOrderStateAction()).and()
-                .withExternal().source(OrderStates.PENDING_NEW).target(OrderStates.NEW_ACK).event(OrderStateEvents.OMS_ACCEPT).action(updateOrderStateAction()).and()
-                .withExternal().source(OrderStates.PENDING_NEW).target(OrderStates.REJECTED_BY_OMS).event(OrderStateEvents.OMS_REJECT).action(updateOrderStateAction()).and()
-                .withExternal().source(OrderStates.NEW_ACK).target(OrderStates.ACCEPTED_BY_DESK).event(OrderStateEvents.DESK_APPROVE).action(updateOrderStateAction()).and()
-                .withExternal().source(OrderStates.NEW_ACK).target(OrderStates.REJECTED_BY_DESK).event(OrderStateEvents.DESK_REJECT).action(updateOrderStateAction()).and()
-                .withExternal().source(OrderStates.ACCEPTED_BY_DESK).target(OrderStates.SENT_TO_EXCHANGE).event(OrderStateEvents.SUBMIT_TO_EXCHANGE).action(updateOrderStateAction()).and()
-                .withExternal().source(OrderStates.SENT_TO_EXCHANGE).target(OrderStates.ACKNOWLEDGED_BY_EXCHANGE).event(OrderStateEvents.EXCHANGE_ACKNOWLEDGE).action(updateOrderStateAction()).and()
-                .withExternal().source(OrderStates.SENT_TO_EXCHANGE).target(OrderStates.REJECTED_BY_EXCHANGE).event(OrderStateEvents.EXCHANGE_REJECT).action(updateOrderStateAction());
+            .source(OrderStates.NEW_ORDER).target(OrderStates.PENDING_NEW).event(OrderStateEvents.SUBMIT_TO_DESK).action(orderStateAction()).and()
+                .withExternal().source(OrderStates.PENDING_NEW).target(OrderStates.NEW_ACK).event(OrderStateEvents.OMS_ACCEPT).action(orderStateAction()).and()
+                .withExternal().source(OrderStates.PENDING_NEW).target(OrderStates.REJECTED_BY_OMS).event(OrderStateEvents.OMS_REJECT).action(orderStateAction()).and()
+                .withExternal().source(OrderStates.NEW_ACK).target(OrderStates.ACCEPTED_BY_DESK).event(OrderStateEvents.DESK_APPROVE).action(orderStateAction()).and()
+                .withExternal().source(OrderStates.NEW_ACK).target(OrderStates.REJECTED_BY_DESK).event(OrderStateEvents.DESK_REJECT).action(orderStateAction()).and()
+                .withExternal().source(OrderStates.ACCEPTED_BY_DESK).target(OrderStates.SENT_TO_EXCHANGE).event(OrderStateEvents.SUBMIT_TO_EXCHANGE).action(orderStateAction()).and()
+                .withExternal().source(OrderStates.SENT_TO_EXCHANGE).target(OrderStates.ACKNOWLEDGED_BY_EXCHANGE).event(OrderStateEvents.EXCHANGE_ACKNOWLEDGE).action(orderStateAction()).and()
+                .withExternal().source(OrderStates.SENT_TO_EXCHANGE).target(OrderStates.REJECTED_BY_EXCHANGE).event(OrderStateEvents.EXCHANGE_REJECT).action(orderStateAction());
     }
 }
