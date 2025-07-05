@@ -9,10 +9,8 @@ import com.leon.model.OrderEvent;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.util.function.Function;
 
 @Component
@@ -36,19 +34,16 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
     {
         try
         {
-            MDC.put("errorId", event.getErrorId());
             processOrder(event.getOrder());
         }
-        finally
+        catch(Exception e)
         {
-            MDC.remove("errorId");
+            log.error("Error processing order event: {}", event, e);
         }
     }
 
     private void processOrder(Order order)
     {
-        ampsMessageOutboundProcessor.sendOrderEvent(order);
-        orderRepository.save(order);
-        log.info("Order saved: {}", order.getOrderId());
+        log.info("Order processed: {}", order.getOrderId());
     }
 } 
