@@ -3,12 +3,14 @@ package com.leon.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 @Document(collection = "orders")
 public class Order
 {
@@ -47,7 +49,7 @@ public class Order
     private String clientCode;
     private String clientDescription;
     private String ownerId;
-    private String state;
+    private OrderStates state;
     private String arrivalTime;
     private double arrivalPrice;
     private double averagePrice;

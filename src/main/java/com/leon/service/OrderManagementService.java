@@ -6,16 +6,15 @@ import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
 public class OrderManagementService
 {
-    private static final Logger log = LoggerFactory.getLogger(OrderManagementService.class);
+    private static final Logger logger = LoggerFactory.getLogger(OrderManagementService.class);
     private static int countOfOrders = 0;
     @Autowired
     private final OrderEventHandler orderEventHandler;
@@ -28,23 +27,24 @@ public class OrderManagementService
     @PreDestroy
     public void shutdown()
     {
-        log.info("Shutting down OrderManagementService. Total orders processed: {}", countOfOrders);
+        logger.info("Shutting down OrderManagementService. Total orders processed: {}", countOfOrders);
         disruptorService.stop();
     }
 
     public void processOrder(Order order)
     {
-        String errorId = UUID.randomUUID().toString();
-        MDC.put("errorId", errorId);
-        try {
+        try
+        {
             countOfOrders++;
             if(!isValidOrder(order)) {
-                log.error("Invalid order: {}", order);
+                logger.error("Invalid order: {}", order);
                 return;
             }
             disruptorService.push(order);
-        } finally {
-            MDC.remove("errorId");
+        }
+        catch (Exception e)
+        {
+            logger.error("Error processing order: {}", order, e);
         }
     }
 
