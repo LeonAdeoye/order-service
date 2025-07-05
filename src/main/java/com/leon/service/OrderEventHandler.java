@@ -53,9 +53,7 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             log.info("Order {} transitioned from {} to {} due to event {}", order.getOrderId(), currentState, newState, event);
         }
         else
-        {
             log.warn("No valid transition for order {} from state {} with event {}", order.getOrderId(), currentState, event);
-        }
     }
 
     private void processOrder(Order order)

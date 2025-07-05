@@ -16,7 +16,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Document(collection = "orders")
+@Document(collection = "Orders")
 public class Order
 {
     private static final Logger log = LoggerFactory.getLogger(Order.class);
