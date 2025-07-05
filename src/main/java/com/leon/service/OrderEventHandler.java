@@ -1,9 +1,8 @@
 package com.leon.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.leon.messaging.AmpsMessageOutboundProcessor;
 import com.leon.model.OrderStateEvents;
+import com.leon.model.OrderStates;
 import com.lmax.disruptor.EventHandler;
 import com.leon.model.Order;
 import com.leon.model.OrderEvent;
@@ -12,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import java.util.function.Function;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -24,11 +23,7 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
     @Autowired
     private AmpsMessageOutboundProcessor ampsMessageOutboundProcessor;
     @Autowired
-    private OrderFiniteStateMachineService orderFiniteStateMachineService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-    private static final double ROUNDING_FACTOR = Math.pow(10, 2);
-    private static final Function<Double, Double> round2dp = (value) -> Math.round(value * ROUNDING_FACTOR) / ROUNDING_FACTOR;
+    private OrderStateMachine orderStateMachine;
 
     @Override
     public void onEvent(OrderEvent event, long sequence, boolean endOfBatch)
@@ -43,18 +38,38 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
         }
     }
 
+    public void applyEvent(Order order, OrderStateEvents event)
+    {
+        log.info("Order received: {}", order.getOrderId());
+        OrderStates currentState = order.getState();
+        Optional<OrderStates> nextStateOpt = OrderStateMachine.getNextState(currentState, event);
+
+        if (nextStateOpt.isPresent())
+        {
+            OrderStates newState = nextStateOpt.get();
+            order.setState(newState);
+            orderService.saveOrder(order);
+            ampsMessageOutboundProcessor.sendOrder(order);
+            log.info("Order {} transitioned from {} to {} due to event {}", order.getOrderId(), currentState, newState, event);
+        }
+        else
+        {
+            log.warn("No valid transition for order {} from state {} with event {}", order.getOrderId(), currentState, event);
+        }
+    }
+
     private void processOrder(Order order)
     {
         switch(order.getState())
         {
             case NEW_ORDER:
-                log.info("New order received: {}", order.getOrderId());
-                orderService.saveOrder(order);
-                orderFiniteStateMachineService.sendEvent(order.getOrderId(), OrderStateEvents.SUBMIT_TO_DESK);
-                ampsMessageOutboundProcessor.sendOrderEvent(order);
+                applyEvent(order, OrderStateEvents.SUBMIT_TO_DESK);
+                break;
+            case PENDING_NEW:
+                applyEvent(order, OrderStateEvents.OMS_ACCEPT);
                 break;
             default:
-                log.warn("Order state not handled: {}", order.getState());
+                log.warn("Unknown order state not handled: {}", order.getState());
                 break;
         }
     }

@@ -36,7 +36,7 @@ public class AmpsMessageOutboundProcessor
         }
     }
 
-    public void sendOrderEvent(Order order)
+    public void sendOrder(Order order)
     {
         try
         {
