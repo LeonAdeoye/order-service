@@ -8,32 +8,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.action.Action;
-import org.springframework.statemachine.config.EnableStateMachineFactory;
+import org.springframework.statemachine.config.EnableStateMachine;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
-import org.springframework.statemachine.config.builders.StateMachineModelConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
-import org.springframework.statemachine.config.model.StateMachineModelFactory;
 import java.util.EnumSet;
 
 @Configuration
-@EnableStateMachineFactory
+@EnableStateMachine
 public class OrderFiniteStateMachineConfiguration extends StateMachineConfigurerAdapter<OrderStates, OrderStateEvents>
 {
     private static final Logger logger = LoggerFactory.getLogger(DisruptorServiceImpl.class);
     @Autowired
     private OrderService orderService;
-    @Autowired
-    private StateMachineModelFactory modelFactory;
     @Override
     public void configure(StateMachineStateConfigurer<OrderStates, OrderStateEvents> states) throws Exception {
         states.withStates().initial(OrderStates.NEW).states(EnumSet.allOf(OrderStates.class));
-    }
-
-    @Override
-    public void configure(StateMachineModelConfigurer<OrderStates, OrderStateEvents> model) throws Exception {
-        model.withModel().factory(modelFactory);
     }
 
     @Override
@@ -68,6 +59,4 @@ public class OrderFiniteStateMachineConfiguration extends StateMachineConfigurer
                 .withExternal().source(OrderStates.SENT_TO_EXCHANGE).target(OrderStates.ACKNOWLEDGED_BY_EXCHANGE).event(OrderStateEvents.EXCHANGE_ACKNOWLEDGE).action(updateOrderStateAction()).and()
                 .withExternal().source(OrderStates.SENT_TO_EXCHANGE).target(OrderStates.REJECTED_BY_EXCHANGE).event(OrderStateEvents.EXCHANGE_REJECT).action(updateOrderStateAction());
     }
-
-
 }
