@@ -6,9 +6,13 @@ public enum OrderStateEvents {
     OMS_REJECT("OMS Reject"),
     DESK_APPROVE("Desk Approve"),
     DESK_REJECT("Desk Reject"),
-    SUBMIT_TO_EXCHANGE("Submit To Exchange"),
-    EXCHANGE_ACKNOWLEDGE("Exchange Acknowledge"),
-    EXCHANGE_REJECT("Exchange Reject");
+    SUBMIT_TO_EXCH("Submit To Exchange"),
+    EXCH_APPROVE("Exchange Acknowledge"),
+    EXCH_REJECT("Exchange Reject"),
+    FULL_FILL("Full Fill"),
+    DESK_CANCEL("Desk Cancel"),
+    PARTIAL_FILL("Partial Fill"),
+    DESK_REPLACE("Desk Replace");
 
     private final String orderStateEventDescription;
 

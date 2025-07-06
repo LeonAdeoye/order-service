@@ -16,13 +16,38 @@ public class OrderStateMachine
     static
     {
         transitionMap.put(Pair.of(OrderStates.NEW_ORDER, OrderStateEvents.SUBMIT_TO_DESK), OrderStates.PENDING_NEW);
-        transitionMap.put(Pair.of(OrderStates.PENDING_NEW, OrderStateEvents.OMS_ACCEPT), OrderStates.NEW_ACK);
+        transitionMap.put(Pair.of(OrderStates.PENDING_NEW, OrderStateEvents.OMS_ACCEPT), OrderStates.ACCEPTED_BY_OMS);
         transitionMap.put(Pair.of(OrderStates.PENDING_NEW, OrderStateEvents.OMS_REJECT), OrderStates.REJECTED_BY_OMS);
-        transitionMap.put(Pair.of(OrderStates.NEW_ACK, OrderStateEvents.DESK_APPROVE), OrderStates.ACCEPTED_BY_DESK);
-        transitionMap.put(Pair.of(OrderStates.NEW_ACK, OrderStateEvents.DESK_REJECT), OrderStates.REJECTED_BY_DESK);
-        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_DESK, OrderStateEvents.SUBMIT_TO_EXCHANGE), OrderStates.SENT_TO_EXCHANGE);
-        transitionMap.put(Pair.of(OrderStates.SENT_TO_EXCHANGE, OrderStateEvents.EXCHANGE_ACKNOWLEDGE), OrderStates.ACKNOWLEDGED_BY_EXCHANGE);
-        transitionMap.put(Pair.of(OrderStates.SENT_TO_EXCHANGE, OrderStateEvents.EXCHANGE_REJECT), OrderStates.REJECTED_BY_EXCHANGE);
+
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_OMS, OrderStateEvents.DESK_APPROVE), OrderStates.ACCEPTED_BY_DESK);
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_OMS, OrderStateEvents.DESK_REJECT), OrderStates.REJECTED_BY_DESK);
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_OMS, OrderStateEvents.DESK_CANCEL), OrderStates.CANCELLED_BY_DESK);
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_OMS, OrderStateEvents.DESK_REPLACE), OrderStates.REPLACED_BY_DESK);
+
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_DESK, OrderStateEvents.SUBMIT_TO_EXCH), OrderStates.PENDING_EXCH);
+        transitionMap.put(Pair.of(OrderStates.PENDING_EXCH, OrderStateEvents.EXCH_APPROVE), OrderStates.ACCEPTED_BY_EXCH);
+        transitionMap.put(Pair.of(OrderStates.PENDING_EXCH, OrderStateEvents.EXCH_REJECT), OrderStates.REJECTED_BY_EXCH);
+
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_EXCH, OrderStateEvents.DESK_CANCEL), OrderStates.PENDING_CANCEL);
+        transitionMap.put(Pair.of(OrderStates.PENDING_CANCEL, OrderStateEvents.EXCH_APPROVE), OrderStates.CANCELLED_BY_EXCH);
+        transitionMap.put(Pair.of(OrderStates.PENDING_CANCEL, OrderStateEvents.EXCH_REJECT), OrderStates.CANCEL_REJECTED_BY_EXCH);
+
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_EXCH, OrderStateEvents.DESK_REPLACE), OrderStates.PENDING_REPLACE);
+        transitionMap.put(Pair.of(OrderStates.PENDING_REPLACE, OrderStateEvents.EXCH_APPROVE), OrderStates.REPLACED_BY_EXCH);
+        transitionMap.put(Pair.of(OrderStates.PENDING_REPLACE, OrderStateEvents.EXCH_REJECT), OrderStates.REPLACE_REJECTED_BY_EXCH);
+
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_EXCH, OrderStateEvents.FULL_FILL), OrderStates.FULLY_FILLED);
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_EXCH, OrderStateEvents.PARTIAL_FILL), OrderStates.PARTIALLY_FILLED);
+        transitionMap.put(Pair.of(OrderStates.PARTIALLY_FILLED, OrderStateEvents.FULL_FILL), OrderStates.FULLY_FILLED);
+
+        transitionMap.put(Pair.of(OrderStates.PARTIALLY_FILLED, OrderStateEvents.DESK_CANCEL), OrderStates.PENDING_CANCEL);
+        transitionMap.put(Pair.of(OrderStates.PENDING_CANCEL, OrderStateEvents.EXCH_APPROVE), OrderStates.CANCELLED_BY_EXCH);
+
+        transitionMap.put(Pair.of(OrderStates.PARTIALLY_FILLED, OrderStateEvents.DESK_REPLACE), OrderStates.PENDING_REPLACE);
+        transitionMap.put(Pair.of(OrderStates.PENDING_REPLACE, OrderStateEvents.EXCH_APPROVE), OrderStates.REPLACED_BY_EXCH);
+
+        transitionMap.put(Pair.of(OrderStates.REPLACED_BY_EXCH, OrderStateEvents.FULL_FILL), OrderStates.FULLY_FILLED);
+        transitionMap.put(Pair.of(OrderStates.REPLACED_BY_EXCH, OrderStateEvents.PARTIAL_FILL), OrderStates.PARTIALLY_FILLED);
     }
 
     public static Optional<OrderStates> getNextState(OrderStates currentState, OrderStateEvents event) {
