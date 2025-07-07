@@ -2,7 +2,6 @@ package com.leon.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.leon.messaging.AmpsMessageOutboundProcessor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -73,6 +72,7 @@ public class Order
     private double performanceVsArrivalBPS;
     private double performanceVsIVWAP;
     private double performanceVsIVWAPBPS;
+    private OrderStateEvents actionEvent;
 
     public String toJSON()
     {

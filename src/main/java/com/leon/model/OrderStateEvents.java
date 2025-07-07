@@ -1,7 +1,7 @@
 package com.leon.model;
 
 public enum OrderStateEvents {
-    SUBMIT_TO_DESK("Submit To desk"),
+    SUBMIT_TO_OMS("Submit To OMS"),
     OMS_ACCEPT("OMS Accept"),
     OMS_REJECT("OMS Reject"),
     DESK_APPROVE("Desk Approve"),

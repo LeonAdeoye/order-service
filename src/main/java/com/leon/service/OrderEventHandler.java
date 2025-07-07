@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.util.Optional;
 
+import static com.leon.model.OrderStates.NEW_ORDER;
+
 @Component
 @RequiredArgsConstructor
 public class OrderEventHandler implements EventHandler<OrderEvent>
@@ -38,11 +40,11 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
         }
     }
 
-    public void applyEvent(Order order, OrderStateEvents event)
+    public void applyActionEvent(Order order)
     {
         log.info("Order received: {}", order.getOrderId());
         OrderStates currentState = order.getState();
-        Optional<OrderStates> nextStateOpt = OrderStateMachine.getNextState(currentState, event);
+        Optional<OrderStates> nextStateOpt = OrderStateMachine.getNextState(currentState, order.getActionEvent());
 
         if (nextStateOpt.isPresent())
         {
@@ -50,25 +52,20 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             order.setState(newState);
             orderService.saveOrder(order);
             ampsMessageOutboundProcessor.sendOrder(order);
-            log.info("Order {} transitioned from {} to {} due to event {}", order.getOrderId(), currentState, newState, event);
+            log.info("Order {} transitioned from {} to {} due to event {}", order.getOrderId(), currentState, newState, order.getActionEvent());
         }
         else
-            log.warn("No valid transition for order {} from state {} with event {}", order.getOrderId(), currentState, event);
+            log.warn("No valid transition for order {} from state {} with event {}", order.getOrderId(), currentState, order.getActionEvent());
     }
 
     private void processOrder(Order order)
     {
-        switch(order.getState())
+        if(order.getState() == NEW_ORDER && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_OMS)
         {
-            case NEW_ORDER:
-                applyEvent(order, OrderStateEvents.SUBMIT_TO_DESK);
-                break;
-            case PENDING_NEW:
-                applyEvent(order, OrderStateEvents.OMS_ACCEPT);
-                break;
-            default:
-                log.warn("Unknown order state not handled: {}", order.getState());
-                break;
+            applyActionEvent(order);
+            applyActionEvent(order);
         }
+        else
+            applyActionEvent(order);
     }
 } 

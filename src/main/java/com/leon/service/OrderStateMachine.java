@@ -15,16 +15,17 @@ public class OrderStateMachine
 
     static
     {
-        transitionMap.put(Pair.of(OrderStates.NEW_ORDER, OrderStateEvents.SUBMIT_TO_DESK), OrderStates.PENDING_NEW);
+        transitionMap.put(Pair.of(OrderStates.NEW_ORDER, OrderStateEvents.SUBMIT_TO_OMS), OrderStates.PENDING_NEW);
         transitionMap.put(Pair.of(OrderStates.PENDING_NEW, OrderStateEvents.OMS_ACCEPT), OrderStates.ACCEPTED_BY_OMS);
         transitionMap.put(Pair.of(OrderStates.PENDING_NEW, OrderStateEvents.OMS_REJECT), OrderStates.REJECTED_BY_OMS);
 
         transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_OMS, OrderStateEvents.DESK_APPROVE), OrderStates.ACCEPTED_BY_DESK);
         transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_OMS, OrderStateEvents.DESK_REJECT), OrderStates.REJECTED_BY_DESK);
-        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_OMS, OrderStateEvents.DESK_CANCEL), OrderStates.CANCELLED_BY_DESK);
-        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_OMS, OrderStateEvents.DESK_REPLACE), OrderStates.REPLACED_BY_DESK);
 
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_DESK, OrderStateEvents.DESK_CANCEL), OrderStates.CANCELLED_BY_DESK);
+        transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_DESK, OrderStateEvents.DESK_REPLACE), OrderStates.REPLACED_BY_DESK);
         transitionMap.put(Pair.of(OrderStates.ACCEPTED_BY_DESK, OrderStateEvents.SUBMIT_TO_EXCH), OrderStates.PENDING_EXCH);
+
         transitionMap.put(Pair.of(OrderStates.PENDING_EXCH, OrderStateEvents.EXCH_APPROVE), OrderStates.ACCEPTED_BY_EXCH);
         transitionMap.put(Pair.of(OrderStates.PENDING_EXCH, OrderStateEvents.EXCH_REJECT), OrderStates.REJECTED_BY_EXCH);
 
