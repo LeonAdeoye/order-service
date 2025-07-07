@@ -40,11 +40,11 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
         }
     }
 
-    public void applyActionEvent(Order order)
+    public void applyActionEvent(Order order, OrderStateEvents actionEvent)
     {
         log.info("Order received: {}", order.getOrderId());
         OrderStates currentState = order.getState();
-        Optional<OrderStates> nextStateOpt = OrderStateMachine.getNextState(currentState, order.getActionEvent());
+        Optional<OrderStates> nextStateOpt = OrderStateMachine.getNextState(currentState, actionEvent);
 
         if (nextStateOpt.isPresent())
         {
@@ -52,20 +52,20 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             order.setState(newState);
             orderService.saveOrder(order);
             ampsMessageOutboundProcessor.sendOrder(order);
-            log.info("Order {} transitioned from {} to {} due to event {}", order.getOrderId(), currentState, newState, order.getActionEvent());
+            log.info("Order {} transitioned from {} to {} due to event {}", order.getOrderId(), currentState, newState, actionEvent);
         }
         else
-            log.warn("No valid transition for order {} from state {} with event {}", order.getOrderId(), currentState, order.getActionEvent());
+            log.warn("No valid transition for order {} from state {} with event {}", order.getOrderId(), currentState, actionEvent);
     }
 
     private void processOrder(Order order)
     {
         if(order.getState() == NEW_ORDER && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_OMS)
         {
-            applyActionEvent(order);
-            applyActionEvent(order);
+            applyActionEvent(order, order.getActionEvent());
+            applyActionEvent(order, OrderStateEvents.OMS_ACCEPT);
         }
         else
-            applyActionEvent(order);
+            applyActionEvent(order, order.getActionEvent());
     }
 } 
