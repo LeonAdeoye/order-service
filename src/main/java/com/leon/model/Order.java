@@ -58,7 +58,7 @@ public class Order
     private String clientDescription;
     private String ownerId;
     private OrderStates state;
-    @JsonFormat(pattern = "h:mm:ss a")
+    @JsonFormat(pattern = "hh:mm:ss a")
     private LocalTime arrivalTime;
     private double arrivalPrice;
     private double averagePrice;
