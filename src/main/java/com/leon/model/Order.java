@@ -1,5 +1,6 @@
 package com.leon.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
@@ -57,6 +58,7 @@ public class Order
     private String clientDescription;
     private String ownerId;
     private OrderStates state;
+    @JsonFormat(pattern = "h:mm:ss a")
     private LocalTime arrivalTime;
     private double arrivalPrice;
     private double averagePrice;
