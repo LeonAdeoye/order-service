@@ -3,6 +3,7 @@ package com.leon.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -82,8 +83,13 @@ public class Order
     {
         try
         {
+            SimpleModule timeModule = new SimpleModule();
+            timeModule.addDeserializer(LocalTime.class, new CustomLocalTimeDeserializer());
+
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new JavaTimeModule());
+            mapper.registerModule(timeModule);
+
             return mapper.writeValueAsString(this);
         }
         catch (JsonProcessingException e)
