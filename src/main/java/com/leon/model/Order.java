@@ -3,6 +3,7 @@ package com.leon.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -58,7 +59,6 @@ public class Order
     private String clientDescription;
     private String ownerId;
     private OrderStates state;
-    @JsonFormat(pattern = "hh:mm:ss a")
     private LocalTime arrivalTime;
     private double arrivalPrice;
     private double averagePrice;
@@ -83,6 +83,7 @@ public class Order
         try
         {
             ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
             return mapper.writeValueAsString(this);
         }
         catch (JsonProcessingException e)

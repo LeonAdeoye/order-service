@@ -75,7 +75,12 @@
             <groupId>com.crankuptheamps</groupId>
             <artifactId>amps-client</artifactId>
             <version>${amps_client.version}</version>
-        </dependency>        
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.15.2</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
