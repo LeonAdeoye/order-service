@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,7 +33,7 @@ public class Order
     private String settlementType;
     private String exchangeAcronym;
     private String side;
-    private double quantity;
+    private int quantity;
     private String priceType;
     private double price;
     private String tif;
@@ -56,17 +58,18 @@ public class Order
     private String clientDescription;
     private String ownerId;
     private OrderStates state;
-    private String arrivalTime;
+    private LocalDateTime arrivalTime;
     private double arrivalPrice;
     private double averagePrice;
     private double adv20;
     private String executionTrigger;
-    private double pending;
-    private double executed;
-    private double executedNotionalValue;
-    private double orderNotionalValue;
+    private int pending;
+    private int executed;
+    private double executedNotionalValueInUSD;
+    private double orderNotionalValueInUSD;
     private double orderNotionalValueInLocal;
-    private double residualNotionalValue;
+    private double residualNotionalValueInUSD;
+    private double residualNotionalValueInLocal;
     private double ivwap;
     private double performanceVsArrival;
     private double performanceVsArrivalBPS;
