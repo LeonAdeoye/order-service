@@ -10,8 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
@@ -58,7 +57,7 @@ public class Order
     private String clientDescription;
     private String ownerId;
     private OrderStates state;
-    private LocalDateTime arrivalTime;
+    private LocalTime arrivalTime;
     private double arrivalPrice;
     private double averagePrice;
     private double adv20;
