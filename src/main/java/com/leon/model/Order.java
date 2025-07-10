@@ -1,9 +1,8 @@
 package com.leon.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
@@ -26,6 +24,11 @@ public class Order
 
     @Id
     private String orderId;
+    private String parentOrderId;
+    @JsonProperty("isFirmAccount")
+    private boolean isFirmAccount;
+    @JsonProperty("isRiskAccount")
+    private boolean isRiskAccount;
     private String instrumentCode;
     private String instrumentDescription;
     private String assetType;
@@ -45,8 +48,6 @@ public class Order
     private String accountMnemonic;
     private String accountName;
     private String legalEntity;
-    private boolean isFirmAccount;
-    private boolean isRiskAccount;
     private String customFlags;
     private String brokerAcronym;
     private String brokerDescription;
@@ -60,7 +61,7 @@ public class Order
     private String clientDescription;
     private String ownerId;
     private OrderStates state;
-    private LocalTime arrivalTime;
+    private String arrivalTime;
     private double arrivalPrice;
     private double averagePrice;
     private double adv20;
@@ -83,12 +84,8 @@ public class Order
     {
         try
         {
-            SimpleModule timeModule = new SimpleModule();
-            timeModule.addDeserializer(LocalTime.class, new CustomLocalTimeDeserializer());
-
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new JavaTimeModule());
-            mapper.registerModule(timeModule);
 
             return mapper.writeValueAsString(this);
         }

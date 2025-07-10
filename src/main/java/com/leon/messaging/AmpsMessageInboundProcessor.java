@@ -4,6 +4,7 @@ import com.crankuptheamps.client.Client;
 import com.crankuptheamps.client.Message;
 import com.crankuptheamps.client.MessageHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.leon.model.Order;
 import com.leon.service.OrderManagementService;
 import com.leon.validator.OrderMessageValidator;
@@ -28,8 +29,7 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
     private String ordersInboundTopic;
     @Autowired
     private final OrderManagementService orderManagementService;
-    @Autowired
-    private final ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
     @Autowired
     private final OrderMessageValidator messageValidator;
     private Client ampsClient;
@@ -42,6 +42,10 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
             ampsClient = new Client(ampsClientName);
             ampsClient.connect(ampsServerUrl);
             ampsClient.logon();
+
+            objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+
             for(Message message : (ampsClient.subscribe(ordersInboundTopic)))
             {
                 invoke(message);
@@ -66,6 +70,7 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
                 log.error("ERR-008: Invalid message received: {}", validationResult.errorMessage());
                 return;
             }
+            log.info("Processing message: {}", message.getData());
 
             Order order = objectMapper.readValue(message.getData(), Order.class);
             log.info("Received valid order message: {}", order);
