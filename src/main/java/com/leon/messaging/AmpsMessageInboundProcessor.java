@@ -5,6 +5,10 @@ import com.crankuptheamps.client.Message;
 import com.crankuptheamps.client.MessageHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import com.leon.model.Order;
 import com.leon.service.OrderManagementService;
 import com.leon.validator.OrderMessageValidator;
@@ -16,6 +20,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Component
 @RequiredArgsConstructor
@@ -44,7 +53,12 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
             ampsClient.logon();
 
             objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JavaTimeModule());
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm:ss a", Locale.ENGLISH);
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d/yyyy", Locale.ENGLISH);
+            JavaTimeModule javaTimeModule = new JavaTimeModule();
+            javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(dateFormatter));
+            javaTimeModule.addDeserializer(LocalTime.class, new LocalTimeDeserializer(timeFormatter));
+            objectMapper.registerModule(javaTimeModule);
 
             for(Message message : (ampsClient.subscribe(ordersInboundTopic)))
             {
