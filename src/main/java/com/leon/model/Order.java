@@ -28,7 +28,6 @@ import java.util.Locale;
 public class Order
 {
     private static final Logger log = LoggerFactory.getLogger(Order.class);
-
     @Id
     private String orderId;
     private String parentOrderId;
@@ -87,6 +86,7 @@ public class Order
     private double performanceVsIVWAP;
     private double performanceVsIVWAPBPS;
     private OrderStateEvents actionEvent;
+    private double percentageOfParentOrder;
 
     public String toJSON()
     {
