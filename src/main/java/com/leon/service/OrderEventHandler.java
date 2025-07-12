@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.util.Optional;
 
-import static com.leon.model.OrderStates.NEW_ORDER;
+import static com.leon.model.OrderStates.*;
 
 @Component
 @RequiredArgsConstructor
@@ -26,6 +26,8 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
     private AmpsMessageOutboundProcessor ampsMessageOutboundProcessor;
     @Autowired
     private OrderStateMachine orderStateMachine;
+    @Autowired
+    private OrderAggregationService orderAggregationService;
 
     @Override
     public void onEvent(OrderEvent event, long sequence, boolean endOfBatch)
@@ -51,21 +53,44 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             OrderStates newState = nextStateOpt.get();
             order.setState(newState);
             orderService.saveOrder(order);
-            ampsMessageOutboundProcessor.sendOrder(order);
+            if(order.getState().equals(OrderStates.PENDING_EXCH))
+                ampsMessageOutboundProcessor.sendOrderToExchange(order);
+            ampsMessageOutboundProcessor.sendOrderToGUI(order);
             log.info("Order {} transitioned from {} to {} due to event {}", order.getOrderId(), currentState, newState, actionEvent);
         }
         else
             log.warn("No valid transition for order {} from state {} with event {}", order.getOrderId(), currentState, actionEvent);
     }
 
+    private void applyAggregation(Order order)
+    {
+        if(Order.isParentOrder(order))
+            orderAggregationService.updateParent(order);
+        else
+            orderAggregationService.updateChild(order);
+    }
+
     private void processOrder(Order order)
     {
-        if(order.getState() == NEW_ORDER && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_OMS)
+        if(order.getState() == NEW_ORDER && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_OMS && Order.isParentOrder(order))
         {
             applyActionEvent(order, order.getActionEvent());
             applyActionEvent(order, OrderStateEvents.OMS_ACCEPT);
+            orderAggregationService.updateParent(order);
+            ampsMessageOutboundProcessor.sendOrderToGUI(order);
+            log.info("Parent order {} submitted to OMS", order.getOrderId());
+            return;
         }
-        else
+
+        if(order.getState() == ACCEPTED_BY_DESK && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_EXCH && Order.isChildOrder(order))
+        {
             applyActionEvent(order, order.getActionEvent());
+            orderAggregationService.updateChild(order);
+            ampsMessageOutboundProcessor.sendOrderToExchange(order);
+            log.info("Child order {} submitted to exchange", order.getOrderId());
+            return;
+        }
+
+        applyAggregation(order);
     }
 } 

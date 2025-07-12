@@ -6,5 +6,4 @@ import lombok.Data;
 public class OrderEvent
 {
     private Order order;
-    private String errorId;
 } 

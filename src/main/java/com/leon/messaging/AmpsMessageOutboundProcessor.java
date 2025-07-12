@@ -17,8 +17,10 @@ public class AmpsMessageOutboundProcessor
     private String ampsServerUrl;
     @Value("${amps.client.name}")
     private String ampsClientName;
-    @Value("${amps.topic.order.outbound}")
-    private String ordersOutboundTopic;
+    @Value("${amps.topic.order.gui.outbound}")
+    private String ordersOutboundGUITopic;
+    @Value("${amps.topic.order.exch.outbound}")
+    private String ordersOutboundExchangeTopic;
 
     @PostConstruct
     public void initialize() throws Exception
@@ -36,16 +38,29 @@ public class AmpsMessageOutboundProcessor
         }
     }
 
-    public void sendOrder(Order order)
+    public void sendOrderToGUI(Order order)
     {
         try
         {
-            ampsClient.publish(ordersOutboundTopic, order.toJSON());
-            log.info("Published order message: {}", order);
+            ampsClient.publish(ordersOutboundGUITopic, order.toJSON());
+            log.info("Published order message to GUI: {}", order);
         }
         catch (Exception e)
         {
-            log.error("ERR-902: Failed to publish order message: {}", order, e);
+            log.error("ERR-902: Failed to publish order message to GUI: {}", order, e);
+        }
+    }
+
+    public void sendOrderToExchange(Order order)
+    {
+        try
+        {
+            ampsClient.publish(ordersOutboundExchangeTopic, order.toJSON());
+            log.info("Published order message to exchange: {}", order);
+        }
+        catch (Exception e)
+        {
+            log.error("ERR-903: Failed to publish order message to exchange: {}", order, e);
         }
     }
 }

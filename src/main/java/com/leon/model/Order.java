@@ -43,7 +43,7 @@ public class Order
     private String settlementCurrency;
     private String settlementType;
     private String exchangeAcronym;
-    private String side;
+    private Side side;
     private int quantity;
     private String priceType;
     private double price;
@@ -87,6 +87,15 @@ public class Order
     private double performanceVsIVWAPBPS;
     private OrderStateEvents actionEvent;
     private double percentageOfParentOrder;
+
+    public static boolean isParentOrder(Order order)
+    {
+        return order.getParentOrderId().equals(order.getOrderId());
+    }
+    public static boolean isChildOrder(Order order)
+    {
+        return !order.getParentOrderId().equals(order.getOrderId());
+    }
 
     public String toJSON()
     {
