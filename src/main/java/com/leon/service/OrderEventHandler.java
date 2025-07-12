@@ -82,6 +82,12 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             return;
         }
 
+        if(order.getState() == ACCEPTED_BY_OMS && order.getActionEvent() == OrderStateEvents.DESK_APPROVE && Order.isParentOrder(order))
+        {
+            applyActionEvent(order, order.getActionEvent());
+            return;
+        }
+
         if(order.getState() == ACCEPTED_BY_DESK && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_EXCH && Order.isChildOrder(order))
         {
             applyActionEvent(order, order.getActionEvent());

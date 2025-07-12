@@ -1,6 +1,7 @@
 package com.leon.messaging;
 
 import com.crankuptheamps.client.Client;
+import com.crankuptheamps.client.Command;
 import com.crankuptheamps.client.Message;
 import com.crankuptheamps.client.MessageHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +26,8 @@ import java.util.Locale;
 
 @Component
 @RequiredArgsConstructor
-public class AmpsMessageInboundProcessor implements MessageHandler {
+public class AmpsMessageInboundProcessor implements MessageHandler
+{
     private static final Logger log = LoggerFactory.getLogger(AmpsMessageInboundProcessor.class);
     @Value("${amps.server.url}")
     private String ampsServerUrl;
@@ -50,7 +52,6 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
             ampsClient = new Client(ampsClientName);
             ampsClient.connect(ampsServerUrl);
             ampsClient.logon();
-
             objectMapper = new ObjectMapper();
             DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm:ss a", Locale.ENGLISH);
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d/yyyy", Locale.ENGLISH);
@@ -58,8 +59,8 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
             javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(dateFormatter));
             javaTimeModule.addDeserializer(LocalTime.class, new LocalTimeDeserializer(timeFormatter));
             objectMapper.registerModule(javaTimeModule);
-            ampsClient.subscribe(ordersOutboundGUITopic);
-            ampsClient.subscribe(ordersOutboundExchTopic);
+            ampsClient.executeAsync(new Command("subscribe").setTopic(ordersOutboundGUITopic), this);
+            ampsClient.executeAsync(new Command("subscribe").setTopic(ordersOutboundExchTopic), this);
         }
         catch (Exception e)
         {
@@ -74,18 +75,14 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
         try
         {
             ValidationResult validationResult = messageValidator.validateMessage(message.getData());
-
             if (!validationResult.valid())
             {
                 log.error("ERR-008: Invalid message received: {}", validationResult.errorMessage());
                 return;
             }
-            log.info("Processing message: {}", message.getData());
-
             Order order = objectMapper.readValue(message.getData(), Order.class);
-            log.info("Received valid order message: {}", order);
+            log.info("Processing valid order message: {}", order);
             orderManagementService.processOrder(order);
-
         }
         catch (Exception e)
         {
