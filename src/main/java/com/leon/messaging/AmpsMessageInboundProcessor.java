@@ -31,10 +31,10 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
     private String ampsServerUrl;
     @Value("${amps.client.name}")
     private String ampsClientName;
-    @Value("${amps.topic.order.gui.inbound}")
-    private String ordersInboundGUITopic;
-    @Value("${amps.topic.order.exch.inbound}")
-    private String ordersInboundExchTopic;
+    @Value("${amps.topic.orders.gui.outbound}")
+    private String ordersOutboundGUITopic;
+    @Value("${amps.topic.orders.exch.outbound}")
+    private String ordersOutboundExchTopic;
     @Autowired
     private final OrderManagementService orderManagementService;
     private ObjectMapper objectMapper;
@@ -58,8 +58,8 @@ public class AmpsMessageInboundProcessor implements MessageHandler {
             javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(dateFormatter));
             javaTimeModule.addDeserializer(LocalTime.class, new LocalTimeDeserializer(timeFormatter));
             objectMapper.registerModule(javaTimeModule);
-            ampsClient.subscribe(ordersInboundGUITopic);
-            ampsClient.subscribe(ordersInboundExchTopic);
+            ampsClient.subscribe(ordersOutboundGUITopic);
+            ampsClient.subscribe(ordersOutboundExchTopic);
         }
         catch (Exception e)
         {

@@ -17,10 +17,10 @@ public class AmpsMessageOutboundProcessor
     private String ampsServerUrl;
     @Value("${amps.client.name}")
     private String ampsClientName;
-    @Value("${amps.topic.order.gui.outbound}")
-    private String ordersOutboundGUITopic;
-    @Value("${amps.topic.order.exch.outbound}")
-    private String ordersOutboundExchangeTopic;
+    @Value("${amps.topic.orders.gui.inbound}")
+    private String ordersInboundGUITopic;
+    @Value("${amps.topic.orders.exch.inbound}")
+    private String ordersInboundExchangeTopic;
 
     @PostConstruct
     public void initialize() throws Exception
@@ -42,7 +42,7 @@ public class AmpsMessageOutboundProcessor
     {
         try
         {
-            ampsClient.publish(ordersOutboundGUITopic, order.toJSON());
+            ampsClient.publish(ordersInboundGUITopic, order.toJSON());
             log.info("Published order message to GUI: {}", order);
         }
         catch (Exception e)
@@ -55,7 +55,7 @@ public class AmpsMessageOutboundProcessor
     {
         try
         {
-            ampsClient.publish(ordersOutboundExchangeTopic, order.toJSON());
+            ampsClient.publish(ordersInboundExchangeTopic, order.toJSON());
             log.info("Published order message to exchange: {}", order);
         }
         catch (Exception e)
