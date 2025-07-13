@@ -75,6 +75,7 @@ public class Order
     private int pending;
     private int executed;
     private double executedNotionalValueInUSD;
+    private double executedNotionalValueInLocal;
     private double orderNotionalValueInUSD;
     private double orderNotionalValueInLocal;
     private double residualNotionalValueInUSD;
@@ -86,6 +87,9 @@ public class Order
     private double performanceVsIVWAPBPS;
     private OrderStateEvents actionEvent;
     private double percentageOfParentOrder;
+    private String originalSource;
+    private String currentSource;
+    private String targetSource;
 
     public static boolean isParentOrder(Order order)
     {
@@ -94,6 +98,16 @@ public class Order
     public static boolean isChildOrder(Order order)
     {
         return !order.getParentOrderId().equals(order.getOrderId());
+    }
+
+    public static boolean isFullyFilled(Order parentOrder)
+    {
+        return parentOrder.getPending() == 0 && parentOrder.getExecuted() == parentOrder.getQuantity();
+    }
+
+    public static boolean isPartiallyFilled(Order parentOrder)
+    {
+        return parentOrder.getPending() > 0 && parentOrder.getExecuted() > 0 && parentOrder.getExecuted() < parentOrder.getQuantity();
     }
 
     public String toJSON()

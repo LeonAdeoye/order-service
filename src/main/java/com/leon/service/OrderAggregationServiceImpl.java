@@ -1,6 +1,7 @@
 package com.leon.service;
 
 import com.leon.model.Order;
+import com.leon.model.OrderStates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -15,15 +16,15 @@ public class OrderAggregationServiceImpl implements OrderAggregationService
     private final Map<String, Order> children = new HashMap<>();
 
     @Override
-    public void addParent(Order parent)
+    public void addParent(Order parentOrder)
     {
-        parents.put(parent.getOrderId(), parent);
+        parents.put(parentOrder.getOrderId(), parentOrder);
     }
 
     @Override
-    public void addChild(Order child)
+    public void addChild(Order childOrder)
     {
-        children.put(child.getOrderId(), child);
+        children.put(childOrder.getOrderId(), childOrder);
     }
 
     @Override
@@ -39,19 +40,53 @@ public class OrderAggregationServiceImpl implements OrderAggregationService
     }
 
     @Override
-    public void updateParent(Order parent)
+    public void updateParent(Order parentOrder)
     {
-        if (parent != null && parent.getOrderId() != null) {
-            parents.put(parent.getOrderId(), parent);
-        }
+        if (parentOrder != null && parentOrder.getOrderId() != null)
+            parents.put(parentOrder.getOrderId(), parentOrder);
+    }
+
+    public Order getParentOrder(Order childOrder)
+    {
+        return parents.get(childOrder.getParentOrderId());
     }
 
     @Override
-    public void updateChild(Order child)
+    public void updateChild(Order childOrder)
     {
-        if (child != null && child.getOrderId() != null) {
-            children.put(child.getOrderId(), child);
+        if (childOrder.getExecuted() > 0)
+        {
+            Order parentOrder = getParentOrder(childOrder);
+            if (parentOrder != null)
+            {
+                logger.info(">>>>>>>>>>>>>>>>updating pending and executed values for parent order {} from child order {}, original parent pending: {}, and child executed: {}, new pending: {}",
+                        parentOrder.getOrderId(), childOrder.getOrderId(), parentOrder.getPending(), childOrder.getExecuted(), parentOrder.getPending() - childOrder.getExecuted());
+                parentOrder.setPending(parentOrder.getPending() - childOrder.getExecuted());
+
+                logger.info(">>>>>>>>>>>>>>>>>updating executed value for parent order {} from child order {}, original parent executed: {}, and child executed: {}, new executed: {}",
+                        parentOrder.getOrderId(), childOrder.getOrderId(), parentOrder.getExecuted(), childOrder.getExecuted(), parentOrder.getExecuted() + childOrder.getExecuted());
+                parentOrder.setExecuted(parentOrder.getExecuted() + childOrder.getExecuted());
+
+                parentOrder.setResidualNotionalValueInLocal(parentOrder.getPending() * parentOrder.getPrice());
+                parentOrder.setExecutedNotionalValueInLocal(parentOrder.getExecuted() * parentOrder.getPrice());
+
+                if (childOrder.getExecuted() > 0)
+                    childOrder.setAveragePrice(childOrder.getExecutedNotionalValueInLocal() / childOrder.getExecuted());
+
+                if (parentOrder.getExecuted() > 0)
+                    parentOrder.setAveragePrice(parentOrder.getExecutedNotionalValueInLocal() / parentOrder.getExecuted());
+
+                if(Order.isFullyFilled(parentOrder))
+                    parentOrder.setState(OrderStates.FULLY_FILLED);
+                else if(Order.isPartiallyFilled(parentOrder))
+                    parentOrder.setState(OrderStates.PARTIALLY_FILLED);
+
+                parents.put(parentOrder.getOrderId(), parentOrder);
+                logger.info("Updated parent order {} from child order {}", parentOrder.getOrderId(), childOrder.getOrderId());
+            }
+            else
+                logger.warn("Parent order with ID {} not found for child {}", parentOrder.getOrderId(), childOrder.getOrderId());
         }
-        // update parent
+        children.put(childOrder.getOrderId(), childOrder);
     }
 }

@@ -60,7 +60,7 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
 
     private void processOrder(Order order)
     {
-        log.info("Order received for processing: {}", order);
+        log.info("{} order received for processing with order Id: {}", (Order.isParentOrder(order) ? "Parent" : "Child"), order.getOrderId());
         if(order.getState() == NEW_ORDER && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_OMS && Order.isParentOrder(order))
         {
             transitionToNewState(order, order.getActionEvent());
@@ -92,11 +92,12 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             if(order.getPending() == 0 && order.getExecuted() == order.getQuantity())
                 transitionToNewState(order, OrderStateEvents.FULL_FILL);
 
-            if(order.getPending() > 0 && order.getExecuted() < order.getQuantity())
+            if(order.getPending() > 0 && order.getExecuted() > 0 && order.getExecuted() < order.getQuantity())
                 transitionToNewState(order, OrderStateEvents.PARTIAL_FILL);
 
             orderAggregationService.updateChild(order);
             ampsMessageOutboundProcessor.sendOrderToGUI(order);
+            ampsMessageOutboundProcessor.sendOrderToGUI(orderAggregationService.getParentOrder(order));
         }
     }
 } 

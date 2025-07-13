@@ -42,6 +42,8 @@ public class AmpsMessageOutboundProcessor
     {
         try
         {
+            order.setCurrentSource("ORDER_MANAGEMENT_SERVICE");
+            order.setTargetSource("WEB_TRADER");
             ampsClient.publish(ordersInboundGUITopic, order.toJSON());
             log.info("Published order message to GUI: {}", order);
         }
@@ -55,6 +57,8 @@ public class AmpsMessageOutboundProcessor
     {
         try
         {
+            order.setCurrentSource("ORDER_MANAGEMENT_SERVICE");
+            order.setTargetSource("EXCHANGE_SERVICE");
             ampsClient.publish(ordersInboundExchangeTopic, order.toJSON());
             log.info("Published order message to exchange: {}", order);
         }
