@@ -59,12 +59,7 @@ public class OrderAggregationServiceImpl implements OrderAggregationService
             Order parentOrder = getParentOrder(childOrder);
             if (parentOrder != null)
             {
-                logger.info(">>>>>>>>>>>>>>>>updating pending and executed values for parent order {} from child order {}, original parent pending: {}, and child executed: {}, new pending: {}",
-                        parentOrder.getOrderId(), childOrder.getOrderId(), parentOrder.getPending(), childOrder.getExecuted(), parentOrder.getPending() - childOrder.getExecuted());
                 parentOrder.setPending(parentOrder.getPending() - childOrder.getExecuted());
-
-                logger.info(">>>>>>>>>>>>>>>>>updating executed value for parent order {} from child order {}, original parent executed: {}, and child executed: {}, new executed: {}",
-                        parentOrder.getOrderId(), childOrder.getOrderId(), parentOrder.getExecuted(), childOrder.getExecuted(), parentOrder.getExecuted() + childOrder.getExecuted());
                 parentOrder.setExecuted(parentOrder.getExecuted() + childOrder.getExecuted());
 
                 parentOrder.setResidualNotionalValueInLocal(parentOrder.getPending() * parentOrder.getPrice());

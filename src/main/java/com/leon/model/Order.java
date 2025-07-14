@@ -27,6 +27,18 @@ import java.util.Locale;
 public class Order
 {
     private static final Logger log = LoggerFactory.getLogger(Order.class);
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm:ss a", Locale.ENGLISH);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("M/d/yyyy", Locale.ENGLISH);
+    private static final ObjectMapper MAPPER;
+    static
+    {
+        JavaTimeModule javaTimeModule = new JavaTimeModule();
+        javaTimeModule.addSerializer(LocalDate.class, new LocalDateSerializer(DATE_FORMATTER));
+        javaTimeModule.addSerializer(LocalTime.class, new LocalTimeSerializer(TIME_FORMATTER));
+        MAPPER = new ObjectMapper();
+        MAPPER.registerModule(javaTimeModule);
+    }
+
     @Id
     private String orderId;
     private String parentOrderId;
@@ -114,15 +126,7 @@ public class Order
     {
         try
         {
-            ObjectMapper mapper = new ObjectMapper();
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm:ss a", Locale.ENGLISH);
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d/yyyy", Locale.ENGLISH);
-            JavaTimeModule javaTimeModule = new JavaTimeModule();
-            javaTimeModule.addSerializer(LocalDate.class, new LocalDateSerializer(dateFormatter));
-            javaTimeModule.addSerializer(LocalTime.class, new LocalTimeSerializer(timeFormatter));
-            mapper.registerModule(javaTimeModule);
-
-            return mapper.writeValueAsString(this);
+            return MAPPER.writeValueAsString(this);
         }
         catch (JsonProcessingException e)
         {
