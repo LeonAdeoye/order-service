@@ -51,37 +51,38 @@ public class OrderAggregationServiceImpl implements OrderAggregationService
         return parents.get(childOrder.getParentOrderId());
     }
 
-    @Override
     public void updateChild(Order childOrder)
     {
-        if (childOrder.getExecuted() > 0)
+        Order parentOrder = getParentOrder(childOrder);
+        if (parentOrder != null)
         {
-            Order parentOrder = getParentOrder(childOrder);
-            if (parentOrder != null)
-            {
-                parentOrder.setPending(parentOrder.getPending() - childOrder.getExecuted());
-                parentOrder.setExecuted(parentOrder.getExecuted() + childOrder.getExecuted());
+            parentOrder.setPending(parentOrder.getPending() - childOrder.getExecuted());
+            parentOrder.setExecuted(parentOrder.getExecuted() + childOrder.getExecuted());
 
-                parentOrder.setResidualNotionalValueInLocal(parentOrder.getPending() * parentOrder.getPrice());
-                parentOrder.setExecutedNotionalValueInLocal(parentOrder.getExecuted() * parentOrder.getPrice());
+            parentOrder.setResidualNotionalValueInLocal(parentOrder.getPending() * parentOrder.getPrice());
+            parentOrder.setExecutedNotionalValueInLocal(parentOrder.getExecuted() * parentOrder.getPrice());
 
-                if (childOrder.getExecuted() > 0)
-                    childOrder.setAveragePrice(childOrder.getExecutedNotionalValueInLocal() / childOrder.getExecuted());
+            if (childOrder.getExecuted() > 0)
+                childOrder.setAveragePrice(childOrder.getExecutedNotionalValueInLocal() / childOrder.getExecuted());
 
-                if (parentOrder.getExecuted() > 0)
-                    parentOrder.setAveragePrice(parentOrder.getExecutedNotionalValueInLocal() / parentOrder.getExecuted());
+            if (parentOrder.getExecuted() > 0)
+                parentOrder.setAveragePrice(parentOrder.getExecutedNotionalValueInLocal() / parentOrder.getExecuted());
 
-                if(Order.isFullyFilled(parentOrder))
-                    parentOrder.setState(OrderStates.FULLY_FILLED);
-                else if(Order.isPartiallyFilled(parentOrder))
-                    parentOrder.setState(OrderStates.PARTIALLY_FILLED);
+            if(Order.isFullyFilled(parentOrder))
+                parentOrder.setState(OrderStates.FULLY_FILLED);
+            else if(Order.isPartiallyFilled(parentOrder))
+                parentOrder.setState(OrderStates.PARTIALLY_FILLED);
 
-                parents.put(parentOrder.getOrderId(), parentOrder);
-                logger.info("Updated parent order {} from child order {}", parentOrder.getOrderId(), childOrder.getOrderId());
-            }
-            else
-                logger.warn("Parent order with ID {} not found for child {}", parentOrder.getOrderId(), childOrder.getOrderId());
+            childOrder.setCumulativeExecuted(childOrder.getExecuted());
+
+            parents.put(parentOrder.getOrderId(), parentOrder);
+            logger.info("Updated parent order {} from child order {}", parentOrder.getOrderId(), childOrder.getOrderId());
         }
+        else
+        {
+            logger.warn("Parent order with ID {} not found for child {}", parentOrder.getOrderId(), childOrder.getOrderId());
+        }
+
         children.put(childOrder.getOrderId(), childOrder);
     }
 }

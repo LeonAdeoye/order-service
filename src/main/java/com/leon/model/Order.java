@@ -86,6 +86,7 @@ public class Order
     private String executionTrigger;
     private int pending;
     private int executed;
+    private int cumulativeExecuted;
     private double executedNotionalValueInUSD;
     private double executedNotionalValueInLocal;
     private double orderNotionalValueInUSD;
@@ -102,6 +103,72 @@ public class Order
     private String originalSource;
     private String currentSource;
     private String targetSource;
+
+    public Order(Order newOrder)
+    {
+        this.orderId = newOrder.getOrderId();
+        this.parentOrderId = newOrder.getParentOrderId();
+        this.isFirmAccount = newOrder.isFirmAccount();
+        this.isRiskAccount = newOrder.isRiskAccount();
+        this.instrumentCode = newOrder.getInstrumentCode();
+        this.instrumentDescription = newOrder.getInstrumentDescription();
+        this.assetType = newOrder.getAssetType();
+        this.blgCode = newOrder.getBlgCode();
+        this.ric = newOrder.getRic();
+        this.settlementCurrency = newOrder.getSettlementCurrency();
+        this.settlementType = newOrder.getSettlementType();
+        this.exchangeAcronym = newOrder.getExchangeAcronym();
+        this.side = newOrder.getSide();
+        this.quantity = newOrder.getQuantity();
+        this.pending = newOrder.getPending();
+        this.executed = newOrder.getExecuted();
+        this.cumulativeExecuted = newOrder.getCumulativeExecuted();
+        this.priceType = newOrder.getPriceType();
+        this.price = newOrder.getPrice();
+        this.tif = newOrder.getTif();
+        this.traderInstruction = newOrder.getTraderInstruction();
+        this.qualifier = newOrder.getQualifier();
+        this.destination = newOrder.getDestination();
+        this.accountMnemonic = newOrder.getAccountMnemonic();
+        this.accountName = newOrder.getAccountName();
+        this.legalEntity = newOrder.getLegalEntity();
+        this.customFlags = newOrder.getCustomFlags();
+        this.brokerAcronym = newOrder.getBrokerAcronym();
+        this.brokerDescription = newOrder.getBrokerDescription();
+        this.handlingInstruction = newOrder.getHandlingInstruction();
+        this.algoType = newOrder.getAlgoType();
+        this.facilConsent = newOrder.isFacilConsent();
+        this.facilConsentDetails = newOrder.getFacilConsentDetails();
+        this.facilInstructions = newOrder.getFacilInstructions();
+        this.lotSize = newOrder.getLotSize();
+        this.clientCode = newOrder.getClientCode();
+        this.clientDescription = newOrder.getClientDescription();
+        this.ownerId = newOrder.getOwnerId();
+        this.state = newOrder.getState();
+        this.tradeDate = newOrder.getTradeDate();
+        this.arrivalTime = newOrder.getArrivalTime();
+        this.arrivalPrice = newOrder.getArrivalPrice();
+        this.averagePrice = newOrder.getAveragePrice();
+        this.adv20 = newOrder.getAdv20();
+        this.executionTrigger = newOrder.getExecutionTrigger();
+        this.executedNotionalValueInUSD = newOrder.getExecutedNotionalValueInUSD();
+        this.executedNotionalValueInLocal = newOrder.getExecutedNotionalValueInLocal();
+        this.orderNotionalValueInUSD = newOrder.getOrderNotionalValueInUSD();
+        this.orderNotionalValueInLocal = newOrder.getOrderNotionalValueInLocal();
+        this.residualNotionalValueInUSD = newOrder.getResidualNotionalValueInUSD();
+        this.residualNotionalValueInLocal = newOrder.getResidualNotionalValueInLocal();
+        this.ivwap = newOrder.getIvwap();
+        this.performanceVsArrival = newOrder.getPerformanceVsArrival();
+        this.performanceVsArrivalBPS = newOrder.getPerformanceVsArrivalBPS();
+        this.performanceVsIVWAP = newOrder.getPerformanceVsIVWAP();
+        this.performanceVsIVWAPBPS = newOrder.getPerformanceVsIVWAPBPS();
+        this.actionEvent = newOrder.getActionEvent();
+        this.percentageOfParentOrder = newOrder.getPercentageOfParentOrder();
+        this.originalSource = newOrder.getOriginalSource();
+        this.currentSource = newOrder.getCurrentSource();
+        this.targetSource = newOrder.getTargetSource();
+    }
+
 
     public static boolean isParentOrder(Order order)
     {
