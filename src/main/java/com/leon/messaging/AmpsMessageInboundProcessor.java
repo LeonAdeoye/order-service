@@ -31,19 +31,18 @@ public class AmpsMessageInboundProcessor implements MessageHandler
     private String ampsServerUrl;
     @Value("${amps.client.name}")
     private String ampsClientName;
-    @Value("${amps.topic.orders.gui.outbound}")
-    private String ordersOutboundGUITopic;
-    @Value("${amps.topic.orders.exch.outbound}")
-    private String ordersOutboundExchTopic;
+    @Value("${amps.topic.outbound.gui}")
+    private String outboundGUITopic;
+    @Value("${amps.topic.outbound.exchange}")
+    private String outboundExchangeTopic;
     @Autowired
     private final OrderManagementService orderManagementService;
     private ObjectMapper objectMapper;
     @Autowired
     private final OrderMessageValidator messageValidator;
     private Client ampsClient;
-
-    private CommandId ordersOutboundGUITopicId;
-    private CommandId ordersOutboundExchTopicId;
+    private CommandId outboundExchangeTopicId;
+    private CommandId outboundGUITopicId;
 
     @PostConstruct
     public void initialize() throws Exception
@@ -60,8 +59,8 @@ public class AmpsMessageInboundProcessor implements MessageHandler
             javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer(dateFormatter));
             javaTimeModule.addDeserializer(LocalTime.class, new LocalTimeDeserializer(timeFormatter));
             objectMapper.registerModule(javaTimeModule);
-            ordersOutboundGUITopicId = ampsClient.executeAsync(new Command("subscribe").setTopic(ordersOutboundGUITopic), this);
-            ordersOutboundExchTopicId = ampsClient.executeAsync(new Command("subscribe").setTopic(ordersOutboundExchTopic), this);
+            outboundGUITopicId = ampsClient.executeAsync(new Command("subscribe").setTopic(outboundGUITopic), this);
+            outboundExchangeTopicId = ampsClient.executeAsync(new Command("subscribe").setTopic(outboundExchangeTopic), this);
         }
         catch (Exception e)
         {
@@ -77,8 +76,8 @@ public class AmpsMessageInboundProcessor implements MessageHandler
         {
             if (ampsClient != null)
             {
-                ampsClient.unsubscribe(ordersOutboundGUITopicId);
-                ampsClient.unsubscribe(ordersOutboundExchTopicId);
+                ampsClient.unsubscribe(outboundGUITopicId);
+                ampsClient.unsubscribe(outboundExchangeTopicId);
                 ampsClient.disconnect();
                 log.info("Unsubscribed from AMPS topics and disconnected.");
             }
@@ -101,7 +100,7 @@ public class AmpsMessageInboundProcessor implements MessageHandler
                 return;
             }
             Order order = objectMapper.readValue(message.getData(), Order.class);
-            log.info("Processing valid order message: {}", order);
+            log.info("Processing valid message: {}", order);
             orderManagementService.processOrder(order);
         }
         catch (Exception e)

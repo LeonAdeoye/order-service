@@ -54,13 +54,15 @@ public class OrderAggregationServiceImpl implements OrderAggregationService
     public void updateChild(Order childOrder)
     {
         Order parentOrder = getParentOrder(childOrder);
-        if (parentOrder != null)
+        if (parentOrder != null && childOrder.getExecuted() > 0)
         {
             parentOrder.setPending(parentOrder.getPending() - childOrder.getExecuted());
             parentOrder.setExecuted(parentOrder.getExecuted() + childOrder.getExecuted());
 
             parentOrder.setResidualNotionalValueInLocal(parentOrder.getPending() * parentOrder.getPrice());
             parentOrder.setExecutedNotionalValueInLocal(parentOrder.getExecuted() * parentOrder.getPrice());
+            childOrder.setResidualNotionalValueInLocal(childOrder.getPending() * childOrder.getPrice());
+            childOrder.setExecutedNotionalValueInLocal(childOrder.getExecuted() * childOrder.getPrice());
 
             if (childOrder.getExecuted() > 0)
                 childOrder.setAveragePrice(childOrder.getExecutedNotionalValueInLocal() / childOrder.getExecuted());
@@ -73,16 +75,9 @@ public class OrderAggregationServiceImpl implements OrderAggregationService
             else if(Order.isPartiallyFilled(parentOrder))
                 parentOrder.setState(OrderStates.PARTIALLY_FILLED);
 
-            childOrder.setCumulativeExecuted(childOrder.getExecuted());
-
             parents.put(parentOrder.getOrderId(), parentOrder);
             logger.info("Updated parent order {} from child order {}", parentOrder.getOrderId(), childOrder.getOrderId());
         }
-        else
-        {
-            logger.warn("Parent order with ID {} not found for child {}", parentOrder.getOrderId(), childOrder.getOrderId());
-        }
-
         children.put(childOrder.getOrderId(), childOrder);
     }
 }

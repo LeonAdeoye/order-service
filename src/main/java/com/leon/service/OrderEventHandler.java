@@ -34,7 +34,7 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
     {
         try
         {
-            processOrder(event.getOrder());
+            process(event.getOrder());
         }
         catch(Exception e)
         {
@@ -58,11 +58,37 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             log.warn("No valid transition for order {} from state {} with event {}", order.getOrderId(), currentState, actionEvent);
     }
 
-    private void processOrder(Order order)
+    private void process(Order order)
     {
-        log.info("{} order received for processing with order Id: {}", (Order.isParentOrder(order) ? "Parent" : "Child"), order.getOrderId());
-        if(order.getState() == NEW_ORDER && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_OMS && Order.isParentOrder(order))
-        {
+        if(Order.isExecution(order))
+            processExecution(order);
+        else
+            processOrder(order);
+    }
+
+    private void processExecution(Order execution)
+    {
+        log.info("Execution received for processing with id: {}", execution.getOrderId());
+        Order childOrder = orderAggregationService.getChild(execution.getParentOrderId());
+        childOrder.setExecuted(childOrder.getExecuted() + execution.getQuantity());
+        childOrder.setPending(childOrder.getPending() - execution.getQuantity());
+
+        if(childOrder.getPending() == 0 && childOrder.getExecuted() == execution.getQuantity())
+            transitionToNewState(childOrder, OrderStateEvents.FULL_FILL);
+
+        if(childOrder.getPending() > 0 && childOrder.getExecuted() > 0 && childOrder.getExecuted() < childOrder.getQuantity())
+            transitionToNewState(childOrder, OrderStateEvents.PARTIAL_FILL);
+
+        orderService.saveOrder(execution);
+        orderService.saveOrder(childOrder);
+        orderAggregationService.updateChild(childOrder);
+        ampsMessageOutboundProcessor.sendOrderToGUI(childOrder);
+        ampsMessageOutboundProcessor.sendOrderToGUI(orderAggregationService.getParentOrder(childOrder));
+    }
+
+    private void processOrder(Order order) {
+        log.info("{} order received for processing with id: {}", (Order.isParentOrder(order) ? "Parent" : "Child"), order.getOrderId());
+        if (order.getState() == NEW_ORDER && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_OMS && Order.isParentOrder(order)) {
             transitionToNewState(order, order.getActionEvent());
             ampsMessageOutboundProcessor.sendOrderToGUI(order);
             transitionToNewState(order, OrderStateEvents.OMS_ACCEPT);
@@ -71,33 +97,24 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             return;
         }
 
-        if(order.getState() == ACCEPTED_BY_OMS && order.getActionEvent() == OrderStateEvents.DESK_APPROVE && Order.isParentOrder(order))
-        {
+        if (order.getState() == ACCEPTED_BY_OMS && order.getActionEvent() == OrderStateEvents.DESK_APPROVE && Order.isParentOrder(order)) {
             transitionToNewState(order, order.getActionEvent());
             orderAggregationService.updateParent(order);
             ampsMessageOutboundProcessor.sendOrderToGUI(order);
             return;
         }
 
-        if(order.getState() == ACCEPTED_BY_DESK && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_EXCH && Order.isChildOrder(order))
-        {
+        if (order.getState() == ACCEPTED_BY_DESK && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_EXCH && Order.isChildOrder(order)) {
             transitionToNewState(order, order.getActionEvent());
-            orderAggregationService.updateChild(order);
+            orderService.saveOrder(order);
+            orderAggregationService.addChild(order);
             ampsMessageOutboundProcessor.sendOrderToExchange(order);
-            return;
         }
 
-        if(order.getState() == ACCEPTED_BY_EXCH && Order.isChildOrder(order))
-        {
-            if(order.getPending() == 0 && order.getExecuted() == order.getQuantity())
-                transitionToNewState(order, OrderStateEvents.FULL_FILL);
-
-            if(order.getPending() > 0 && order.getExecuted() > 0 && order.getExecuted() < order.getQuantity())
-                transitionToNewState(order, OrderStateEvents.PARTIAL_FILL);
-
+        if (order.getState() == ACCEPTED_BY_EXCH && Order.isChildOrder(order)) {
             orderAggregationService.updateChild(order);
+            orderService.saveOrder(order);
             ampsMessageOutboundProcessor.sendOrderToGUI(order);
-            ampsMessageOutboundProcessor.sendOrderToGUI(orderAggregationService.getParentOrder(order));
         }
     }
 } 
