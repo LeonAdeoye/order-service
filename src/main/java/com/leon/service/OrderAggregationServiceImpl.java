@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderAggregationServiceImpl implements OrderAggregationService
@@ -42,8 +44,13 @@ public class OrderAggregationServiceImpl implements OrderAggregationService
     @Override
     public void updateParent(Order parentOrder)
     {
-        if (parentOrder != null && parentOrder.getOrderId() != null)
-            parents.put(parentOrder.getOrderId(), parentOrder);
+        parents.put(parentOrder.getOrderId(), parentOrder);
+    }
+
+    @Override
+    public void updateChild(Order childOrder)
+    {
+        children.put(childOrder.getOrderId(), childOrder);
     }
 
     public Order getParentOrder(Order childOrder)
@@ -51,7 +58,15 @@ public class OrderAggregationServiceImpl implements OrderAggregationService
         return parents.get(childOrder.getParentOrderId());
     }
 
-    public void updateChild(Order childOrder)
+    @Override
+    public List<Order> getAllChildren(Order parentOrder)
+    {
+        return children.values().stream()
+                .filter(child -> child.getParentOrderId().equals(parentOrder.getOrderId()))
+                .collect(Collectors.toList());
+    }
+
+    public void aggregate(Order childOrder)
     {
         Order parentOrder = getParentOrder(childOrder);
         if (parentOrder != null && childOrder.getExecuted() > 0)

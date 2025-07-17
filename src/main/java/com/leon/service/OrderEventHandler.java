@@ -81,14 +81,16 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
 
         orderService.saveOrder(execution);
         orderService.saveOrder(childOrder);
-        orderAggregationService.updateChild(childOrder);
+        orderAggregationService.aggregate(childOrder);
         ampsMessageOutboundProcessor.sendOrderToGUI(childOrder);
         ampsMessageOutboundProcessor.sendOrderToGUI(orderAggregationService.getParentOrder(childOrder));
     }
 
-    private void processOrder(Order order) {
+    private void processOrder(Order order)
+    {
         log.info("{} order received for processing with id: {}", (Order.isParentOrder(order) ? "Parent" : "Child"), order.getOrderId());
-        if (order.getState() == NEW_ORDER && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_OMS && Order.isParentOrder(order)) {
+        if (order.getState() == NEW_ORDER && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_OMS && Order.isParentOrder(order))
+        {
             transitionToNewState(order, order.getActionEvent());
             ampsMessageOutboundProcessor.sendOrderToGUI(order);
             transitionToNewState(order, OrderStateEvents.OMS_ACCEPT);
@@ -96,24 +98,37 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             ampsMessageOutboundProcessor.sendOrderToGUI(order);
             return;
         }
-
-        if (order.getState() == ACCEPTED_BY_OMS && order.getActionEvent() == OrderStateEvents.DESK_APPROVE && Order.isParentOrder(order)) {
+        if (order.getState() == ACCEPTED_BY_OMS && order.getActionEvent() == OrderStateEvents.DESK_APPROVE && Order.isParentOrder(order))
+        {
             transitionToNewState(order, order.getActionEvent());
             orderAggregationService.updateParent(order);
             ampsMessageOutboundProcessor.sendOrderToGUI(order);
             return;
         }
-
-        if (order.getState() == ACCEPTED_BY_DESK && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_EXCH && Order.isChildOrder(order)) {
+        if (order.getState() == ACCEPTED_BY_DESK && order.getActionEvent() == OrderStateEvents.SUBMIT_TO_EXCH && Order.isChildOrder(order))
+        {
             transitionToNewState(order, order.getActionEvent());
             orderService.saveOrder(order);
             orderAggregationService.addChild(order);
             ampsMessageOutboundProcessor.sendOrderToExchange(order);
         }
-
-        if (order.getState() == ACCEPTED_BY_EXCH && Order.isChildOrder(order)) {
-            orderAggregationService.updateChild(order);
+        if (order.getState() == ACCEPTED_BY_EXCH && Order.isChildOrder(order))
+        {
+            orderAggregationService.aggregate(order);
             orderService.saveOrder(order);
+            ampsMessageOutboundProcessor.sendOrderToGUI(order);
+        }
+        if ((order.getState() == FULLY_FILLED || order.getState() == PARTIALLY_FILLED) && Order.isParentOrder(order) && order.getActionEvent() == OrderStateEvents.DESK_DONE)
+        {
+            transitionToNewState(order, order.getActionEvent());
+            orderAggregationService.updateParent(order);
+            orderAggregationService.getAllChildren(order).forEach(child ->
+            {
+                child.setState(order.getState());
+                orderService.saveOrder(child);
+                ampsMessageOutboundProcessor.sendOrderToGUI(child);
+                ampsMessageOutboundProcessor.sendOrderToExchange(child);
+            });
             ampsMessageOutboundProcessor.sendOrderToGUI(order);
         }
     }
