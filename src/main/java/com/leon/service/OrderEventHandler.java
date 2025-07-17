@@ -125,6 +125,7 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             orderAggregationService.getAllChildren(order).forEach(child ->
             {
                 child.setState(order.getState());
+                child.setActionEvent(order.getActionEvent());
                 orderService.saveOrder(child);
                 ampsMessageOutboundProcessor.sendOrderToGUI(child);
                 ampsMessageOutboundProcessor.sendOrderToExchange(child);
