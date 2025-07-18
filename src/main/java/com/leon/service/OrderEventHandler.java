@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.util.Optional;
-
 import static com.leon.model.OrderStates.*;
 
 @Component
@@ -124,11 +123,11 @@ public class OrderEventHandler implements EventHandler<OrderEvent>
             orderAggregationService.updateParent(order);
             orderAggregationService.getAllChildren(order).forEach(child ->
             {
-                child.setState(order.getState());
                 child.setActionEvent(order.getActionEvent());
-                orderService.saveOrder(child);
-                ampsMessageOutboundProcessor.sendOrderToGUI(child);
                 ampsMessageOutboundProcessor.sendOrderToExchange(child);
+                child.setState(order.getState());
+                ampsMessageOutboundProcessor.sendOrderToGUI(child);
+                orderService.saveOrder(child);
             });
             ampsMessageOutboundProcessor.sendOrderToGUI(order);
         }
