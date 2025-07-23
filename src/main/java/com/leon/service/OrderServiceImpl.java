@@ -38,8 +38,8 @@ public class OrderServiceImpl implements OrderService
     @Override
     public List<Order> getHistory(LocalDate startTradeDate, LocalDate endTradeDate)
     {
-        List<Order> orders = orderRepository.findByTradeDateBetween(startTradeDate, endTradeDate)
-                .stream().filter(order -> order.getState() == OrderStates.DONE_FOR_DAY).toList();
+        List<Order> orders = orderRepository.findByTradeDateBetween(startTradeDate, endTradeDate);
+                //.stream().filter(order -> order.getState() == OrderStates.DONE_FOR_DAY).toList();
 
         if (orders.isEmpty())
             logger.warn("No orders found in the specified date range: {} to {}", startTradeDate, endTradeDate);

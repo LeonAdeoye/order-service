@@ -20,6 +20,7 @@ public class OrderController
     @Autowired
     private final OrderService orderService;
 
+    @CrossOrigin
     @GetMapping("/history")
     public ResponseEntity<List<Order>> getHistory(@RequestParam LocalDate startTradeDate, LocalDate endTradeDate)
     {
