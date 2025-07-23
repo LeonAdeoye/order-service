@@ -41,6 +41,7 @@ public class Order
     @Id
     private String orderId;
     private String parentOrderId;
+    private LocalDate tradeDate;
     @JsonProperty("isFirmAccount")
     private boolean isFirmAccount;
     @JsonProperty("isRiskAccount")
@@ -57,6 +58,7 @@ public class Order
     private int quantity;
     private int pending;
     private int executed;
+    private int sliced;
     private String priceType;
     private double price;
     private String tif;
@@ -79,7 +81,7 @@ public class Order
     private String clientDescription;
     private String ownerId;
     private OrderStates state;
-    private LocalDate tradeDate;
+
     private LocalTime arrivalTime;
     private double arrivalPrice;
     private double averagePrice;
