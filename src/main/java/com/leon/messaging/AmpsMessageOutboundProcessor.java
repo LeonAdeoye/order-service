@@ -1,7 +1,7 @@
 package com.leon.messaging;
 
 import com.crankuptheamps.client.Client;
-import com.leon.model.Order;
+import com.leon.model.MessageData;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,33 +38,33 @@ public class AmpsMessageOutboundProcessor
         }
     }
 
-    public void sendOrderToGUI(Order order)
+    public void sendMessageToGUI(MessageData messageData)
     {
         try
         {
-            order.setCurrentSource("ORDER_MANAGEMENT_SERVICE");
-            order.setTargetSource("WEB_TRADER");
-            ampsClient.publish(inboundGUITopic, order.toJSON());
-            log.info("Published order message to GUI: {}", order);
+            messageData.setCurrentSource("ORDER_MANAGEMENT_SERVICE");
+            messageData.setTargetSource("WEB_TRADER");
+            ampsClient.publish(inboundGUITopic, messageData.toJSON());
+            log.info("Published message to GUI: {}", messageData);
         }
         catch (Exception e)
         {
-            log.error("ERR-902: Failed to publish order message to GUI: {}", order, e);
+            log.error("ERR-902: Failed to publish message to GUI: {}", messageData, e);
         }
     }
 
-    public void sendOrderToExchange(Order order)
+    public void sendMessageToExchange(MessageData messageData)
     {
         try
         {
-            order.setCurrentSource("ORDER_MANAGEMENT_SERVICE");
-            order.setTargetSource("EXCHANGE_SERVICE");
-            ampsClient.publish(inboundExchangeTopic, order.toJSON());
-            log.info("Published order message to exchange: {}", order);
+            messageData.setCurrentSource("ORDER_MANAGEMENT_SERVICE");
+            messageData.setTargetSource("EXCHANGE_SERVICE");
+            ampsClient.publish(inboundExchangeTopic, messageData.toJSON());
+            log.info("Published message to exchange: {}", messageData);
         }
         catch (Exception e)
         {
-            log.error("ERR-903: Failed to publish order message to exchange: {}", order, e);
+            log.error("ERR-903: Failed to publish message to exchange: {}", messageData, e);
         }
     }
 }

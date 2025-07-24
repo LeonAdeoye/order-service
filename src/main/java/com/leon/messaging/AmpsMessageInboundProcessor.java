@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
-import com.leon.model.Order;
+import com.leon.model.MessageData;
 import com.leon.service.OrderManagementService;
 import com.leon.validator.OrderMessageValidator;
 import com.leon.validator.ValidationResult;
@@ -99,9 +99,9 @@ public class AmpsMessageInboundProcessor implements MessageHandler
                 log.error("ERR-008: Invalid message received: {}", validationResult.errorMessage());
                 return;
             }
-            Order order = objectMapper.readValue(message.getData(), Order.class);
-            log.info("Processing valid message: {}", order);
-            orderManagementService.processOrder(order);
+            MessageData messageData = objectMapper.readValue(message.getData(), MessageData.class);
+            log.info("Processing valid message: {}", messageData);
+            orderManagementService.process(messageData);
         }
         catch (Exception e)
         {

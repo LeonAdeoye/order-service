@@ -1,6 +1,6 @@
 package com.leon.service;
 
-import com.leon.model.Order;
+import com.leon.model.MessageData;
 import com.leon.model.OrderStates;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -19,38 +19,39 @@ public class OrderServiceImpl implements OrderService
 {
     private static final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
     @Autowired
-    private OrderRepository orderRepository;
+    private MessageDataRepository messageDataRepository;
     private final Executor dbTaskExecutor;
     @Autowired
     private OrderCache orderCache;
 
      @Override
-    public Optional<Order> getOrderById(String orderId)
+    public Optional<MessageData> getOrderById(String orderId)
     {
         return Optional.ofNullable(orderCache.getOrder(orderId))
             .or(() ->
             {
                 logger.info("Order not found in cache, fetching from database: {}", orderId);
-                return orderRepository.findById(orderId);
+                return messageDataRepository.findById(orderId);
             });
     }
 
     @Override
-    public List<Order> getHistory(LocalDate startTradeDate, LocalDate endTradeDate)
+    public List<MessageData> getHistory(LocalDate startTradeDate, LocalDate endTradeDate)
     {
-        List<Order> orders = orderRepository.findByTradeDateBetween(startTradeDate, endTradeDate);
-                //.stream().filter(order -> order.getState() == OrderStates.DONE_FOR_DAY).toList();
+        List<MessageData> messageData = messageDataRepository.findByTradeDateBetween(startTradeDate, endTradeDate)
+            .stream().filter(order -> order.getState() == OrderStates.DONE_FOR_DAY).toList();
 
-        if (orders.isEmpty())
+        if (messageData.isEmpty())
             logger.warn("No orders found in the specified date range: {} to {}", startTradeDate, endTradeDate);
 
-        return orders;
+        return messageData;
     }
 
     @Override
-    public void saveOrder(Order orderToSave)
+    public void saveOrder(MessageData messageDataToSave)
     {
-        orderCache.addOrder(orderToSave);
-        dbTaskExecutor.execute(() -> orderRepository.save(orderToSave));
+        messageDataToSave.setVersion(messageDataToSave.getVersion() + 1);
+        orderCache.addOrder(messageDataToSave);
+        dbTaskExecutor.execute(() -> messageDataRepository.save(messageDataToSave));
     }
 }

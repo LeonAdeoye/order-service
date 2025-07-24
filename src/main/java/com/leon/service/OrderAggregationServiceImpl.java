@@ -1,6 +1,7 @@
 package com.leon.service;
 
-import com.leon.model.Order;
+import com.leon.model.MessageData;
+import com.leon.model.OrderStateEvents;
 import com.leon.model.OrderStates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,85 +15,124 @@ import java.util.stream.Collectors;
 public class OrderAggregationServiceImpl implements OrderAggregationService
 {
     private static final Logger logger = LoggerFactory.getLogger(OrderAggregationServiceImpl.class);
-    private final Map<String, Order> parents = new HashMap<>();
-    private final Map<String, Order> children = new HashMap<>();
+    private final Map<String, MessageData> parents = new HashMap<>();
+    private final Map<String, MessageData> children = new HashMap<>();
 
     @Override
-    public void addParent(Order parentOrder)
+    public void addParent(MessageData parentMessageData)
     {
-        parents.put(parentOrder.getOrderId(), parentOrder);
+        parents.put(parentMessageData.getOrderId(), parentMessageData);
     }
 
     @Override
-    public void addChild(Order childOrder)
+    public void addChild(MessageData childMessageData)
     {
-        children.put(childOrder.getOrderId(), childOrder);
+        children.put(childMessageData.getOrderId(), childMessageData);
     }
 
     @Override
-    public Order getParent(String orderId)
+    public MessageData getParent(String orderId)
     {
         return parents.get(orderId);
     }
 
     @Override
-    public Order getChild(String orderId)
+    public MessageData getChildOrder(String orderId)
     {
         return children.get(orderId);
     }
 
     @Override
-    public void updateParent(Order parentOrder)
+    public void updateParent(MessageData parentMessageData)
     {
-        parents.put(parentOrder.getOrderId(), parentOrder);
+        parents.put(parentMessageData.getOrderId(), parentMessageData);
     }
 
     @Override
-    public void updateChild(Order childOrder)
+    public void updateChild(MessageData childMessageData)
     {
-        children.put(childOrder.getOrderId(), childOrder);
+        children.put(childMessageData.getOrderId(), childMessageData);
     }
 
-    public Order getParentOrder(Order childOrder)
+    public MessageData getParentOrder(MessageData childMessageData)
     {
-        return parents.get(childOrder.getParentOrderId());
+        return parents.get(childMessageData.getParentOrderId());
     }
 
     @Override
-    public List<Order> getAllChildren(Order parentOrder)
+    public List<MessageData> getAllChildren(MessageData parentMessageData)
     {
         return children.values().stream()
-                .filter(child -> child.getParentOrderId().equals(parentOrder.getOrderId()))
+                .filter(child -> child.getParentOrderId().equals(parentMessageData.getOrderId()))
                 .collect(Collectors.toList());
     }
 
-    public void aggregate(Order childOrder)
+    public void aggregate(MessageData childMessageData)
     {
-        Order parentOrder = getParentOrder(childOrder);
-        if (parentOrder != null && childOrder.getExecuted() > 0)
+        MessageData parentMessageData = getParentOrder(childMessageData);
+        if (parentMessageData != null && childMessageData.getExecuted() > 0)
         {
-            parentOrder.setPending(parentOrder.getPending() - childOrder.getExecuted());
-            parentOrder.setExecuted(parentOrder.getExecuted() + childOrder.getExecuted());
+            parentMessageData.setPending(parentMessageData.getPending() - childMessageData.getExecuted());
+            parentMessageData.setExecuted(parentMessageData.getExecuted() + childMessageData.getExecuted());
 
-            parentOrder.setResidualNotionalValueInLocal(parentOrder.getPending() * parentOrder.getPrice());
-            parentOrder.setExecutedNotionalValueInLocal(parentOrder.getExecuted() * parentOrder.getPrice());
-            childOrder.setResidualNotionalValueInLocal(childOrder.getPending() * childOrder.getPrice());
-            childOrder.setExecutedNotionalValueInLocal(childOrder.getExecuted() * childOrder.getPrice());
+            parentMessageData.setResidualNotionalValueInLocal(parentMessageData.getPending() * parentMessageData.getPrice());
+            parentMessageData.setExecutedNotionalValueInLocal(parentMessageData.getExecuted() * parentMessageData.getPrice());
+            childMessageData.setResidualNotionalValueInLocal(childMessageData.getPending() * childMessageData.getPrice());
+            childMessageData.setExecutedNotionalValueInLocal(childMessageData.getExecuted() * childMessageData.getPrice());
 
-            if (childOrder.getExecuted() > 0)
-                childOrder.setAveragePrice(childOrder.getExecutedNotionalValueInLocal() / childOrder.getExecuted());
+            if (childMessageData.getExecuted() > 0)
+                childMessageData.setAveragePrice(childMessageData.getExecutedNotionalValueInLocal() / childMessageData.getExecuted());
 
-            if (parentOrder.getExecuted() > 0)
-                parentOrder.setAveragePrice(parentOrder.getExecutedNotionalValueInLocal() / parentOrder.getExecuted());
+            if (parentMessageData.getExecuted() > 0)
+                parentMessageData.setAveragePrice(parentMessageData.getExecutedNotionalValueInLocal() / parentMessageData.getExecuted());
 
-            if(Order.isFullyFilled(parentOrder))
-                parentOrder.setState(OrderStates.FULLY_FILLED);
-            else if(Order.isPartiallyFilled(parentOrder))
-                parentOrder.setState(OrderStates.PARTIALLY_FILLED);
+            if(MessageData.isFullyFilled(parentMessageData))
+                parentMessageData.setState(OrderStates.FULLY_FILLED);
+            else if(MessageData.isPartiallyFilled(parentMessageData))
+                parentMessageData.setState(OrderStates.PARTIALLY_FILLED);
 
-            parents.put(parentOrder.getOrderId(), parentOrder);
-            logger.info("Updated parent order {} from child order {}", parentOrder.getOrderId(), childOrder.getOrderId());
+            parents.put(parentMessageData.getOrderId(), parentMessageData);
+            logger.info("Updated parent order {} from child order {}", parentMessageData.getOrderId(), childMessageData.getOrderId());
         }
-        children.put(childOrder.getOrderId(), childOrder);
+        children.put(childMessageData.getOrderId(), childMessageData);
+    }
+
+    public void aggregate(MessageData childMessageData, MessageData executionMessageData)
+    {
+        childMessageData.setExecuted(childMessageData.getExecuted() + executionMessageData.getQuantity());
+        childMessageData.setPending(childMessageData.getPending() - executionMessageData.getQuantity());
+
+        if(MessageData.isFullyFilled(childMessageData))
+            childMessageData.setState(OrderStates.FULLY_FILLED);
+
+        if(MessageData.isPartiallyFilled(childMessageData))
+            childMessageData.setState(OrderStates.PARTIALLY_FILLED);
+
+        MessageData parentMessageData = getParentOrder(childMessageData);
+        if (parentMessageData != null && childMessageData.getExecuted() > 0)
+        {
+            parentMessageData.setPending(parentMessageData.getPending() - childMessageData.getExecuted());
+            parentMessageData.setExecuted(parentMessageData.getExecuted() + childMessageData.getExecuted());
+
+            parentMessageData.setResidualNotionalValueInLocal(parentMessageData.getPending() * parentMessageData.getPrice());
+            parentMessageData.setExecutedNotionalValueInLocal(parentMessageData.getExecuted() * parentMessageData.getPrice());
+            childMessageData.setResidualNotionalValueInLocal(childMessageData.getPending() * childMessageData.getPrice());
+            childMessageData.setExecutedNotionalValueInLocal(childMessageData.getExecuted() * childMessageData.getPrice());
+
+            if (childMessageData.getExecuted() > 0)
+                childMessageData.setAveragePrice(childMessageData.getExecutedNotionalValueInLocal() / childMessageData.getExecuted());
+
+            if (parentMessageData.getExecuted() > 0)
+                parentMessageData.setAveragePrice(parentMessageData.getExecutedNotionalValueInLocal() / parentMessageData.getExecuted());
+
+            if(MessageData.isFullyFilled(parentMessageData))
+                parentMessageData.setState(OrderStates.FULLY_FILLED);
+            else if(MessageData.isPartiallyFilled(parentMessageData))
+                parentMessageData.setState(OrderStates.PARTIALLY_FILLED);
+
+            parents.put(parentMessageData.getOrderId(), parentMessageData);
+            logger.info("Updated parent order {} from child order {}", parentMessageData.getOrderId(), childMessageData.getOrderId());
+        }
+        children.put(childMessageData.getOrderId(), childMessageData);
     }
 }

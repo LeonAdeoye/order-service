@@ -1,18 +1,19 @@
 package com.leon.service;
 
-import com.leon.model.Order;
+import com.leon.model.MessageData;
 
 import java.util.List;
 
 public interface OrderAggregationService
 {
-    void addParent(Order parentOrder);
-    void addChild(Order childOrder);
-    Order getParent(String orderId);
-    Order getChild(String orderId);
-    void updateParent(Order parentOrder);
-    void updateChild(Order childOrder);
-    List<Order> getAllChildren(Order parentOrder);
-    void aggregate(Order childOrder);
-    Order getParentOrder(Order childOrder);
+    void addParent(MessageData parentMessageData);
+    void addChild(MessageData childMessageData);
+    MessageData getParent(String orderId);
+    MessageData getChildOrder(String orderId);
+    void updateParent(MessageData parentMessageData);
+    void updateChild(MessageData childMessageData);
+    List<MessageData> getAllChildren(MessageData parentMessageData);
+    void aggregate(MessageData childMessageData);
+    void aggregate(MessageData childMessageData, MessageData executionMessageData);
+    MessageData getParentOrder(MessageData childMessageData);
 }

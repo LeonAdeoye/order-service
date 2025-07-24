@@ -1,6 +1,6 @@
 package com.leon.controller;
 
-import com.leon.model.Order;
+import com.leon.model.MessageData;
 import com.leon.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -22,7 +22,7 @@ public class OrderController
 
     @CrossOrigin
     @GetMapping("/history")
-    public ResponseEntity<List<Order>> getHistory(@RequestParam LocalDate startTradeDate, LocalDate endTradeDate)
+    public ResponseEntity<List<MessageData>> getHistory(@RequestParam LocalDate startTradeDate, LocalDate endTradeDate)
     {
         try
         {
