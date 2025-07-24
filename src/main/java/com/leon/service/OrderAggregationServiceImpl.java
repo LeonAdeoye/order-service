@@ -68,7 +68,7 @@ public class OrderAggregationServiceImpl implements OrderAggregationService
 
     public void aggregate(MessageData childOrderMessageData, MessageData executionMessageData)
     {
-        int executedDelta = executionMessageData.getQuantity();
+        int executedDelta = executionMessageData.getExecuted();
         if (executedDelta > 0)
         {
             childOrderMessageData.setExecuted(childOrderMessageData.getExecuted() + executedDelta);
