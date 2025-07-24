@@ -13,6 +13,6 @@ public interface OrderAggregationService
     void updateParent(MessageData parentMessageData);
     void updateChild(MessageData childMessageData);
     List<MessageData> getAllChildren(MessageData parentMessageData);
-    void aggregate(MessageData childMessageData, MessageData executionMessageData);
+    void aggregate(MessageData parentMessageData, MessageData childMessageData, MessageData executionMessageData);
     MessageData getParentOrder(MessageData childMessageData);
 }

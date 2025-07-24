@@ -69,8 +69,8 @@ public class MessageEventHandler implements EventHandler<MessageEvent>
     {
         log.info("Execution received for processing with id: {}", executionMessageData.getOrderId());
         MessageData childOrderMessageData = orderAggregationService.getChildOrder(executionMessageData.getParentOrderId());
-        orderAggregationService.aggregate(childOrderMessageData, executionMessageData);
         MessageData parentOrderMessageData = orderAggregationService.getParentOrder(childOrderMessageData);
+        orderAggregationService.aggregate(parentOrderMessageData, childOrderMessageData, executionMessageData);
         orderService.saveOrder(executionMessageData);
         orderService.saveOrder(childOrderMessageData);
         orderService.saveOrder(parentOrderMessageData);

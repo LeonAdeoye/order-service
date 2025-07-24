@@ -61,49 +61,33 @@ public class OrderAggregationServiceImpl implements OrderAggregationService
     @Override
     public List<MessageData> getAllChildren(MessageData parentMessageData)
     {
-        return children.values().stream()
-                .filter(child -> child.getParentOrderId().equals(parentMessageData.getOrderId()))
-                .collect(Collectors.toList());
+        return children.values().stream().filter(child -> child.getParentOrderId().equals(parentMessageData.getOrderId())).collect(Collectors.toList());
     }
 
-    public void aggregate(MessageData childOrderMessageData, MessageData executionMessageData)
+    @Override
+    public void aggregate(MessageData parentOrderMessageData, MessageData childOrderMessageData, MessageData executionMessageData)
     {
         int executedDelta = executionMessageData.getExecuted();
         if (executedDelta > 0)
         {
-            childOrderMessageData.setExecuted(childOrderMessageData.getExecuted() + executedDelta);
-            childOrderMessageData.setPending(childOrderMessageData.getPending() - executedDelta);
-
-            if(MessageData.isFullyFilled(childOrderMessageData))
-                childOrderMessageData.setState(OrderStates.FULLY_FILLED);
-
-            if(MessageData.isPartiallyFilled(childOrderMessageData))
-                childOrderMessageData.setState(OrderStates.PARTIALLY_FILLED);
-
-            MessageData parentOrderMessageData = getParentOrder(childOrderMessageData);
-            parentOrderMessageData.setPending(parentOrderMessageData.getPending() - executedDelta);
-            parentOrderMessageData.setExecuted(parentOrderMessageData.getExecuted() + executedDelta);
-
-            parentOrderMessageData.setResidualNotionalValueInLocal(parentOrderMessageData.getPending() * parentOrderMessageData.getPrice());
-            parentOrderMessageData.setExecutedNotionalValueInLocal(parentOrderMessageData.getExecuted() * parentOrderMessageData.getPrice());
-            childOrderMessageData.setResidualNotionalValueInLocal(childOrderMessageData.getPending() * childOrderMessageData.getPrice());
-            childOrderMessageData.setExecutedNotionalValueInLocal(childOrderMessageData.getExecuted() * childOrderMessageData.getPrice());
-
-            if (childOrderMessageData.getExecuted() > 0)
-                childOrderMessageData.setAveragePrice(childOrderMessageData.getExecutedNotionalValueInLocal() / childOrderMessageData.getExecuted());
-
-            if (parentOrderMessageData.getExecuted() > 0)
-                parentOrderMessageData.setAveragePrice(parentOrderMessageData.getExecutedNotionalValueInLocal() / parentOrderMessageData.getExecuted());
-
-            if(MessageData.isFullyFilled(parentOrderMessageData))
-                parentOrderMessageData.setState(OrderStates.FULLY_FILLED);
-
-            else if(MessageData.isPartiallyFilled(parentOrderMessageData))
-                parentOrderMessageData.setState(OrderStates.PARTIALLY_FILLED);
-
-            parents.put(parentOrderMessageData.getOrderId(), parentOrderMessageData);
+            updateOrder(childOrderMessageData, executedDelta);
             children.put(childOrderMessageData.getOrderId(), childOrderMessageData);
-            logger.info("Updated parent order {} and child order {} using execution: {}", parentOrderMessageData.getOrderId(), childOrderMessageData.getOrderId(), executionMessageData.getOrderId());
+
+            updateOrder(parentOrderMessageData, executedDelta);
+            parents.put(parentOrderMessageData.getOrderId(), parentOrderMessageData);
+
+            logger.info("Updated parent order {} and child order {} using execution: {} after quantity executed: {}",
+                parentOrderMessageData.getOrderId(), childOrderMessageData.getOrderId(), executionMessageData.getOrderId(), executedDelta);
         }
+    }
+
+    private void updateOrder(MessageData order, int executedDelta)
+    {
+        order.setExecuted(order.getExecuted() + executedDelta);
+        order.setPending(order.getPending() - executedDelta);
+        order.setResidualNotionalValueInLocal(order.getPending() * order.getPrice());
+        order.setExecutedNotionalValueInLocal(order.getExecuted() * order.getPrice());
+        order.setAveragePrice(order.getExecutedNotionalValueInLocal() / order.getExecuted());
+        order.setState(MessageData.isFullyFilled(order) ? OrderStates.FULLY_FILLED : OrderStates.PARTIALLY_FILLED);
     }
 }
