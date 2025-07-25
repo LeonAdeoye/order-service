@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -28,8 +27,7 @@ public class OrderServiceImpl implements OrderService
      @Override
     public Optional<MessageData> getOrderById(String orderId)
     {
-        return Optional.ofNullable(orderCache.getOrder(orderId))
-            .or(() ->
+        return Optional.ofNullable(orderCache.getOrder(orderId)).or(() ->
             {
                 logger.info("Order not found in cache, fetching from database: {}", orderId);
                 return messageDataRepository.findById(orderId);
@@ -41,7 +39,7 @@ public class OrderServiceImpl implements OrderService
     {
         List<MessageData> messageData = messageDataRepository.findByTradeDateBetween(startTradeDate, endTradeDate)
             .stream().filter(message -> message.getState() == OrderStates.DONE_FOR_DAY
-                        && message.getMessageType() == MessageType.PARENT_ORDER).toList();
+            && message.getMessageType() == MessageType.PARENT_ORDER).toList();
 
         if (messageData.isEmpty())
             logger.warn("No orders found in the specified date range: {} to {}", startTradeDate, endTradeDate);
