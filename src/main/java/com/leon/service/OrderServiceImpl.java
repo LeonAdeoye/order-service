@@ -1,6 +1,7 @@
 package com.leon.service;
 
 import com.leon.model.MessageData;
+import com.leon.model.MessageType;
 import com.leon.model.OrderStates;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -39,7 +40,8 @@ public class OrderServiceImpl implements OrderService
     public List<MessageData> getHistory(LocalDate startTradeDate, LocalDate endTradeDate)
     {
         List<MessageData> messageData = messageDataRepository.findByTradeDateBetween(startTradeDate, endTradeDate)
-            .stream().filter(order -> order.getState() == OrderStates.DONE_FOR_DAY).toList();
+            .stream().filter(message -> message.getState() == OrderStates.DONE_FOR_DAY
+                        && message.getMessageType() == MessageType.PARENT_ORDER).toList();
 
         if (messageData.isEmpty())
             logger.warn("No orders found in the specified date range: {} to {}", startTradeDate, endTradeDate);
