@@ -48,6 +48,25 @@ public class OrderServiceImpl implements OrderService
     }
 
     @Override
+    public List<MessageData> getCrosses()
+    {
+        List<MessageData> messageData = messageDataRepository.findByTradeDate(LocalDate.now())
+                .stream().filter(message -> (message.getState() != OrderStates.FULLY_FILLED &&
+                        message.getState() != OrderStates.REJECTED_BY_OMS &&
+                        message.getState() != OrderStates.REJECTED_BY_DESK &&
+                        message.getState() != OrderStates.REJECTED_BY_EXCH &&
+                        message.getState() != OrderStates.CANCELLED_BY_EXCH &&
+                        message.getState() != OrderStates.CANCELLED_BY_DESK &&
+                        message.getState() != OrderStates.DONE_FOR_DAY &&
+                        message.getMessageType() == MessageType.PARENT_ORDER)).toList();
+
+        if (messageData.isEmpty())
+            logger.warn("No crossing orders found with today's trade date.");
+
+        return messageData;
+    }
+
+    @Override
     public void saveOrder(MessageData messageDataToSave)
     {
         messageDataToSave.setVersion(messageDataToSave.getVersion() + 1);

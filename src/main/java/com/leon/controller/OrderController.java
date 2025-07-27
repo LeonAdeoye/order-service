@@ -30,7 +30,22 @@ public class OrderController
         }
         catch (Exception e)
         {
-            log.error("ERR-1101: Error retrieving audit trail", e);
+            log.error("ERR-1101: Error retrieving trade history", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @CrossOrigin
+    @GetMapping("/crosses")
+    public ResponseEntity<List<MessageData>> getCrosses()
+    {
+        try
+        {
+            return ResponseEntity.ok(orderService.getCrosses());
+        }
+        catch (Exception e)
+        {
+            log.error("ERR-1102: Error retrieving crosses", e);
             return ResponseEntity.internalServerError().build();
         }
     }

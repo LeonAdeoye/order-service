@@ -10,4 +10,5 @@ import java.util.List;
 public interface MessageDataRepository extends MongoRepository<MessageData, String>
 {
     List<MessageData> findByTradeDateBetween(LocalDate startTradeDate, LocalDate endTradeDate);
+    List<MessageData> findByTradeDate(LocalDate tradeDate);
 }
