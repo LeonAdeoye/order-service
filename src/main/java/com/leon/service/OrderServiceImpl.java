@@ -43,8 +43,13 @@ public class OrderServiceImpl implements OrderService
                 && (clientCode.isEmpty() || message.getClientCode().equalsIgnoreCase(clientCode))
                 && (instrumentCode.isEmpty() || message.getInstrumentCode().equalsIgnoreCase(instrumentCode))).toList();
 
+        logger.info("Retrieved {} orders from {} to {} for clientCode: {} and instrumentCode: {}",
+            messageData.size(), startTradeDate, endTradeDate, clientCode, instrumentCode);
+
         if (messageData.isEmpty())
             logger.warn("No orders found in the specified date range: {} to {} for clientCode: {} and instrumentCode: {}", startTradeDate, endTradeDate, clientCode, instrumentCode);
+        else
+            logger.info("Retrieved {} orders from {} to {} for clientCode: {} and instrumentCode: {}", messageData.size(), startTradeDate, endTradeDate, clientCode, instrumentCode);
 
         return messageData;
     }
