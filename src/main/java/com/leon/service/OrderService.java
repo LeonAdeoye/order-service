@@ -10,6 +10,6 @@ public interface OrderService
 {
     void saveOrder(MessageData messageDataToSave);
     Optional<MessageData> getOrderById(String orderId);
-    List<MessageData> getHistory(LocalDate startDate, LocalDate endDate);
+    List<MessageData> getHistory(LocalDate startDate, LocalDate endDate, String clientCode, String instrumentCode);
     List<MessageData> getCrosses();
 }

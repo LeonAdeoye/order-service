@@ -28,21 +28,23 @@ public class OrderServiceImpl implements OrderService
     public Optional<MessageData> getOrderById(String orderId)
     {
         return Optional.ofNullable(orderCache.getOrder(orderId)).or(() ->
-            {
-                logger.info("Order not found in cache, fetching from database: {}", orderId);
-                return messageDataRepository.findById(orderId);
-            });
+        {
+            logger.info("Order not found in cache, fetching from database: {}", orderId);
+            return messageDataRepository.findById(orderId);
+        });
     }
 
     @Override
-    public List<MessageData> getHistory(LocalDate startTradeDate, LocalDate endTradeDate)
+    public List<MessageData> getHistory(LocalDate startTradeDate, LocalDate endTradeDate, String clientCode, String instrumentCode)
     {
         List<MessageData> messageData = messageDataRepository.findByTradeDateBetween(startTradeDate, endTradeDate)
             .stream().filter(message -> message.getState() == OrderStates.DONE_FOR_DAY
-            && message.getMessageType() == MessageType.PARENT_ORDER).toList();
+                && message.getMessageType() == MessageType.PARENT_ORDER
+                && (clientCode.isEmpty() || message.getClientCode().equalsIgnoreCase(clientCode))
+                && (instrumentCode.isEmpty() || message.getInstrumentCode().equalsIgnoreCase(instrumentCode))).toList();
 
         if (messageData.isEmpty())
-            logger.warn("No orders found in the specified date range: {} to {}", startTradeDate, endTradeDate);
+            logger.warn("No orders found in the specified date range: {} to {} for clientCode: {} and instrumentCode: {}", startTradeDate, endTradeDate, clientCode, instrumentCode);
 
         return messageData;
     }
@@ -51,14 +53,15 @@ public class OrderServiceImpl implements OrderService
     public List<MessageData> getCrosses()
     {
         List<MessageData> messageData = messageDataRepository.findByTradeDate(LocalDate.now())
-                .stream().filter(message -> (message.getState() != OrderStates.FULLY_FILLED &&
-                        message.getState() != OrderStates.REJECTED_BY_OMS &&
-                        message.getState() != OrderStates.REJECTED_BY_DESK &&
-                        message.getState() != OrderStates.REJECTED_BY_EXCH &&
-                        message.getState() != OrderStates.CANCELLED_BY_EXCH &&
-                        message.getState() != OrderStates.CANCELLED_BY_DESK &&
-                        message.getState() != OrderStates.DONE_FOR_DAY &&
-                        message.getMessageType() == MessageType.PARENT_ORDER)).toList();
+            .stream().filter(message -> (
+                message.getState() != OrderStates.FULLY_FILLED &&
+                message.getState() != OrderStates.REJECTED_BY_OMS &&
+                message.getState() != OrderStates.REJECTED_BY_DESK &&
+                message.getState() != OrderStates.REJECTED_BY_EXCH &&
+                message.getState() != OrderStates.CANCELLED_BY_EXCH &&
+                message.getState() != OrderStates.CANCELLED_BY_DESK &&
+                message.getState() != OrderStates.DONE_FOR_DAY &&
+                message.getMessageType() == MessageType.PARENT_ORDER)).toList();
 
         if (messageData.isEmpty())
             logger.warn("No crossing orders found with today's trade date.");
