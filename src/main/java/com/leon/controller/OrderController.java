@@ -22,11 +22,12 @@ public class OrderController
 
     @CrossOrigin
     @GetMapping("/history")
-    public ResponseEntity<List<MessageData>> getHistory(@RequestParam LocalDate startTradeDate, @RequestParam LocalDate endTradeDate, @RequestParam String clientCode, @RequestParam String instrumentCode)
+    public ResponseEntity<List<MessageData>> getHistory(@RequestParam LocalDate startTradeDate, @RequestParam LocalDate endTradeDate,
+                                                        @RequestParam String clientCode, @RequestParam String instrumentCode, @RequestParam String ownerId)
     {
         try
         {
-            return ResponseEntity.ok(orderService.getHistory(startTradeDate, endTradeDate, clientCode, instrumentCode));
+            return ResponseEntity.ok(orderService.getHistory(startTradeDate, endTradeDate, clientCode, instrumentCode, ownerId));
         }
         catch (Exception e)
         {

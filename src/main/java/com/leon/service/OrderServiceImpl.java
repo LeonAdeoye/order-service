@@ -35,21 +35,23 @@ public class OrderServiceImpl implements OrderService
     }
 
     @Override
-    public List<MessageData> getHistory(LocalDate startTradeDate, LocalDate endTradeDate, String clientCode, String instrumentCode)
+    public List<MessageData> getHistory(LocalDate startTradeDate, LocalDate endTradeDate, String clientCode, String instrumentCode, String ownerId)
     {
         List<MessageData> messageData = messageDataRepository.findByTradeDateBetween(startTradeDate, endTradeDate)
             .stream().filter(message -> message.getState() == OrderStates.DONE_FOR_DAY
                 && message.getMessageType() == MessageType.PARENT_ORDER
                 && (clientCode.isEmpty() || message.getClientCode().equalsIgnoreCase(clientCode))
+                && (ownerId.isEmpty() || message.getOwnerId().equalsIgnoreCase(ownerId))
                 && (instrumentCode.isEmpty() || message.getInstrumentCode().equalsIgnoreCase(instrumentCode))).toList();
 
-        logger.info("Retrieved {} orders from {} to {} for clientCode: {} and instrumentCode: {}",
-            messageData.size(), startTradeDate, endTradeDate, clientCode, instrumentCode);
+
+        logger.info("Retrieved {} orders from {} to {} for clientCode: {} and instrumentCode: {} and ownerId: {}",
+            messageData.size(), startTradeDate, endTradeDate, clientCode, instrumentCode, ownerId);
 
         if (messageData.isEmpty())
-            logger.warn("No orders found in the specified date range: {} to {} for clientCode: {} and instrumentCode: {}", startTradeDate, endTradeDate, clientCode, instrumentCode);
+            logger.warn("No orders found in the specified date range: {} to {} for clientCode: {} and instrumentCode: {} and ownerId: {}", startTradeDate, endTradeDate, clientCode, instrumentCode, ownerId);
         else
-            logger.info("Retrieved {} orders from {} to {} for clientCode: {} and instrumentCode: {}", messageData.size(), startTradeDate, endTradeDate, clientCode, instrumentCode);
+            logger.info("Retrieved {} orders from {} to {} for clientCode: {} and instrumentCode: {} and ownerId: {}", messageData.size(), startTradeDate, endTradeDate, clientCode, instrumentCode, ownerId);
 
         return messageData;
     }
