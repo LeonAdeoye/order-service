@@ -37,6 +37,21 @@ public class OrderController
     }
 
     @CrossOrigin
+    @GetMapping("/insights")
+    public ResponseEntity<List<MessageData>> getInsights(@RequestParam String insightType)
+    {
+        try
+        {
+            return ResponseEntity.ok(orderService.getInsights(insightType));
+        }
+        catch (Exception e)
+        {
+            log.error("ERR-1101: Error retrieving insights", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @CrossOrigin
     @GetMapping("/crosses")
     public ResponseEntity<List<MessageData>> getCrosses()
     {

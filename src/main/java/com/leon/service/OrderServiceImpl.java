@@ -77,6 +77,11 @@ public class OrderServiceImpl implements OrderService
     }
 
     @Override
+    public List<MessageData> getInsights(String insightType) {
+        return null;
+    }
+
+    @Override
     public void saveOrder(MessageData messageDataToSave)
     {
         messageDataToSave.setVersion(messageDataToSave.getVersion() + 1);

@@ -12,4 +12,5 @@ public interface OrderService
     Optional<MessageData> getOrderById(String orderId);
     List<MessageData> getHistory(LocalDate startDate, LocalDate endDate, String clientCode, String instrumentCode, String ownerId);
     List<MessageData> getCrosses();
+    List<MessageData> getInsights(String insightType);
 }
