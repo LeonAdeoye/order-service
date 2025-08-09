@@ -1,15 +1,20 @@
 package com.leon.service;
 
+import com.leon.model.InsightItem;
 import com.leon.model.MessageData;
 import com.leon.model.MessageType;
 import com.leon.model.OrderStates;
+import com.leon.model.Side;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 
@@ -77,8 +82,89 @@ public class OrderServiceImpl implements OrderService
     }
 
     @Override
-    public List<MessageData> getInsights(String insightType) {
-        return null;
+    public List<InsightItem> getInsights(String insightType, String metric, LocalDate startDate, LocalDate endDate)
+    {
+        List<MessageData> ordersInRange = messageDataRepository.findByTradeDateBetween(startDate, endDate)
+            .stream().filter(message -> message.getMessageType() == MessageType.PARENT_ORDER).toList();
+
+        if (ordersInRange.isEmpty())
+        {
+            logger.warn("No insights found with trade date range.");
+            return new ArrayList<>();
+        }
+
+        logger.info("Retrieved {} records for insights. type={}, metric={}, startDate={}, endDate={}",
+            ordersInRange.size(), insightType, metric, startDate, endDate);
+
+        return convertOrdersToInsightItems(ordersInRange, insightType, metric);
+    }
+
+    private List<InsightItem> convertOrdersToInsightItems(List<MessageData> orders, String insightType, String metric)
+    {
+        Map<String, InsightItem> grouping = new HashMap<>();
+
+        for (MessageData order : orders)
+        {
+            String name = switch (insightType == null ? "" : insightType.toLowerCase())
+            {
+                case "client" -> defaultIfBlank(order.getClientCode(), order.getClientDescription());
+                case "sector" -> defaultIfBlank(order.getInstrumentCode(), "Unknown");
+                case "country" -> defaultIfBlank(order.getSettlementCurrency(), "Unknown");
+                case "instrument" -> defaultIfBlank(order.getInstrumentCode(), order.getInstrumentDescription());
+                default -> "Unknown";
+            };
+
+            InsightItem aggregated = grouping.computeIfAbsent(name, k -> InsightItem.builder()
+                .name(k)
+                .orderBuy(0)
+                .executedBuy(0)
+                .orderSell(0)
+                .executedSell(0)
+                .build());
+
+            double[] values = extractMetricValues(order, metric);
+            double orderValue = values[0];
+            double executedValue = values[1];
+
+            if (order.getSide() == Side.BUY)
+            {
+                aggregated.setOrderBuy(aggregated.getOrderBuy() + orderValue);
+                aggregated.setExecutedBuy(aggregated.getExecutedBuy() + executedValue);
+            }
+            else
+            {
+                aggregated.setOrderSell(aggregated.getOrderSell() - orderValue);
+                aggregated.setExecutedSell(aggregated.getExecutedSell() - executedValue);
+            }
+        }
+
+        return new ArrayList<>(grouping.values());
+    }
+
+    private double[] extractMetricValues(MessageData order, String metric)
+    {
+        String normalized = metric == null ? "shares" : metric.trim().toLowerCase();
+        switch (normalized)
+        {
+            case "notionalUSD":
+                return new double[] { safeDouble(order.getOrderNotionalValueInUSD()), safeDouble(order.getExecutedNotionalValueInUSD()) };
+            case "notionalLocal":
+                return new double[] { safeDouble(order.getOrderNotionalValueInLocal()), safeDouble(order.getExecutedNotionalValueInLocal()) };
+            case "shares":
+            default:
+                return new double[] { order.getQuantity(), order.getExecuted() };
+        }
+    }
+
+    private String defaultIfBlank(String value, String fallback)
+    {
+        if (value == null || value.isBlank()) return fallback == null ? "Unknown" : fallback;
+        return value;
+    }
+
+    private double safeDouble(Double value)
+    {
+        return value == null ? 0d : value;
     }
 
     @Override

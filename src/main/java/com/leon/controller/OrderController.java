@@ -1,5 +1,6 @@
 package com.leon.controller;
 
+import com.leon.model.InsightItem;
 import com.leon.model.MessageData;
 import com.leon.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,22 @@ public class OrderController
     private final OrderService orderService;
 
     @CrossOrigin
+    @GetMapping("/insights")
+    public ResponseEntity<List<InsightItem>> getInsights(@RequestParam String insightType, @RequestParam String metric,
+                                                        @RequestParam LocalDate startDate, @RequestParam LocalDate endDate)
+    {
+        try
+        {
+            return ResponseEntity.ok(orderService.getInsights(insightType, metric, startDate, endDate));
+        }
+        catch (Exception e)
+        {
+            log.error("ERR-1101: Error retrieving insights", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @CrossOrigin
     @GetMapping("/history")
     public ResponseEntity<List<MessageData>> getHistory(@RequestParam LocalDate startTradeDate, @RequestParam LocalDate endTradeDate,
                                                         @RequestParam String clientCode, @RequestParam String instrumentCode, @RequestParam String ownerId)
@@ -31,22 +48,7 @@ public class OrderController
         }
         catch (Exception e)
         {
-            log.error("ERR-1101: Error retrieving trade history", e);
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    @CrossOrigin
-    @GetMapping("/insights")
-    public ResponseEntity<List<MessageData>> getInsights(@RequestParam String insightType)
-    {
-        try
-        {
-            return ResponseEntity.ok(orderService.getInsights(insightType));
-        }
-        catch (Exception e)
-        {
-            log.error("ERR-1101: Error retrieving insights", e);
+            log.error("ERR-1102: Error retrieving trade history", e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -61,7 +63,7 @@ public class OrderController
         }
         catch (Exception e)
         {
-            log.error("ERR-1102: Error retrieving crosses", e);
+            log.error("ERR-1103: Error retrieving crosses", e);
             return ResponseEntity.internalServerError().build();
         }
     }
