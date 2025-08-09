@@ -1,21 +1,13 @@
 package com.leon.service;
 
-import com.leon.model.InsightItem;
-import com.leon.model.MessageData;
-import com.leon.model.MessageType;
-import com.leon.model.OrderStates;
-import com.leon.model.Side;
+import com.leon.model.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Executor;
 
 @RequiredArgsConstructor
@@ -82,7 +74,7 @@ public class OrderServiceImpl implements OrderService
     }
 
     @Override
-    public List<InsightItem> getInsights(String insightType, String metric, LocalDate startDate, LocalDate endDate)
+    public List<InsightItem> getInsights(InsightType insightType, Metric metric, LocalDate startDate, LocalDate endDate)
     {
         List<MessageData> ordersInRange = messageDataRepository.findByTradeDateBetween(startDate, endDate)
             .stream().filter(message -> message.getMessageType() == MessageType.PARENT_ORDER).toList();
@@ -93,24 +85,22 @@ public class OrderServiceImpl implements OrderService
             return new ArrayList<>();
         }
 
-        logger.info("Retrieved {} records for insights. type={}, metric={}, startDate={}, endDate={}",
+        logger.info("Retrieved {} records for insights type={}, metric={}, startDate={}, endDate={}",
             ordersInRange.size(), insightType, metric, startDate, endDate);
 
         return convertOrdersToInsightItems(ordersInRange, insightType, metric);
     }
 
-    private List<InsightItem> convertOrdersToInsightItems(List<MessageData> orders, String insightType, String metric)
+    private List<InsightItem> convertOrdersToInsightItems(List<MessageData> orders, InsightType insightType, Metric metric)
     {
         Map<String, InsightItem> grouping = new HashMap<>();
-
         for (MessageData order : orders)
         {
-            String name = switch (insightType == null ? "" : insightType.toLowerCase())
-            {
-                case "client" -> defaultIfBlank(order.getClientCode(), order.getClientDescription());
-                case "sector" -> defaultIfBlank(order.getInstrumentCode(), "Unknown");
-                case "country" -> defaultIfBlank(order.getSettlementCurrency(), "Unknown");
-                case "instrument" -> defaultIfBlank(order.getInstrumentCode(), order.getInstrumentDescription());
+            String name = switch (insightType == null ? InsightType.UNKNOWN : insightType) {
+                case CLIENT -> defaultIfBlank(order.getClientCode(), order.getClientDescription());
+                case SECTOR -> defaultIfBlank(order.getInstrumentCode(), "Unknown");
+                case COUNTRY -> defaultIfBlank(order.getSettlementCurrency(), "Unknown");
+                case INSTRUMENT -> defaultIfBlank(order.getInstrumentCode(), order.getInstrumentDescription());
                 default -> "Unknown";
             };
 
@@ -141,19 +131,13 @@ public class OrderServiceImpl implements OrderService
         return new ArrayList<>(grouping.values());
     }
 
-    private double[] extractMetricValues(MessageData order, String metric)
-    {
-        String normalized = metric == null ? "shares" : metric.trim().toLowerCase();
-        switch (normalized)
+    private double[] extractMetricValues(MessageData order, Metric metric) {
+        return switch (metric)
         {
-            case "notionalUSD":
-                return new double[] { safeDouble(order.getOrderNotionalValueInUSD()), safeDouble(order.getExecutedNotionalValueInUSD()) };
-            case "notionalLocal":
-                return new double[] { safeDouble(order.getOrderNotionalValueInLocal()), safeDouble(order.getExecutedNotionalValueInLocal()) };
-            case "shares":
-            default:
-                return new double[] { order.getQuantity(), order.getExecuted() };
-        }
+            case NOTIONAL_USD -> new double[] { safeDouble(order.getOrderNotionalValueInUSD()), safeDouble(order.getExecutedNotionalValueInUSD()) };
+            case NOTIONAL_LOCAL -> new double[] { safeDouble(order.getOrderNotionalValueInLocal()), safeDouble(order.getExecutedNotionalValueInLocal()) };
+            case SHARES -> new double[] { order.getQuantity(), order.getExecuted() };
+        };
     }
 
     private String defaultIfBlank(String value, String fallback)

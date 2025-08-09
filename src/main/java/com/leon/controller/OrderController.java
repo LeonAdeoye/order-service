@@ -2,6 +2,8 @@ package com.leon.controller;
 
 import com.leon.model.InsightItem;
 import com.leon.model.MessageData;
+import com.leon.model.Metric;
+import com.leon.model.InsightType;
 import com.leon.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -28,7 +30,10 @@ public class OrderController
     {
         try
         {
-            return ResponseEntity.ok(orderService.getInsights(insightType, metric, startDate, endDate));
+            log.info("Fetching insights of type: {}, metric: {}, from: {} to: {}", insightType, metric, startDate, endDate);
+            Metric metricEnum = Metric.fromString(metric);
+            InsightType insightTypeEnum = InsightType.fromString(insightType);
+            return ResponseEntity.ok(orderService.getInsights(insightTypeEnum, metricEnum, startDate, endDate));
         }
         catch (Exception e)
         {
@@ -44,6 +49,8 @@ public class OrderController
     {
         try
         {
+            log.info("Fetching trade history from: {} to: {}, clientCode: {}, instrumentCode: {}, ownerId: {}",
+                     startTradeDate, endTradeDate, clientCode, instrumentCode, ownerId);
             return ResponseEntity.ok(orderService.getHistory(startTradeDate, endTradeDate, clientCode, instrumentCode, ownerId));
         }
         catch (Exception e)
@@ -59,6 +66,7 @@ public class OrderController
     {
         try
         {
+            log.info("Fetching crosses for today: {}", LocalDate.now());
             return ResponseEntity.ok(orderService.getCrosses());
         }
         catch (Exception e)

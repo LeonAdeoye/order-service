@@ -2,6 +2,8 @@ package com.leon.service;
 
 import com.leon.model.InsightItem;
 import com.leon.model.MessageData;
+import com.leon.model.Metric;
+import com.leon.model.InsightType;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -13,5 +15,5 @@ public interface OrderService
     Optional<MessageData> getOrderById(String orderId);
     List<MessageData> getHistory(LocalDate startDate, LocalDate endDate, String clientCode, String instrumentCode, String ownerId);
     List<MessageData> getCrosses();
-    List<InsightItem> getInsights(String insightType, String metric, LocalDate startDate, LocalDate endDate);
+    List<InsightItem> getInsights(InsightType insightType, Metric metric, LocalDate startDate, LocalDate endDate);
 }
