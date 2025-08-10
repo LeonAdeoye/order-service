@@ -131,7 +131,8 @@ public class OrderServiceImpl implements OrderService
         return new ArrayList<>(grouping.values());
     }
 
-    private double[] extractMetricValues(MessageData order, Metric metric) {
+    private double[] extractMetricValues(MessageData order, Metric metric)
+    {
         return switch (metric)
         {
             case NOTIONAL_USD -> new double[] { safeDouble(order.getOrderNotionalValueInUSD()), safeDouble(order.getExecutedNotionalValueInUSD()) };
