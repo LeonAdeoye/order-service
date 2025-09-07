@@ -12,13 +12,11 @@
         <lombok.version>1.18.30</lombok.version>
         <disruptor.version>3.4.4</disruptor.version>
         <amps_client.version>5.3.3.0</amps_client.version>
-        <spring-statemachine.version>4.0.1</spring-statemachine.version>
     </properties>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.2.5</version>
-        <relativePath/>
     </parent>
     <dependencies>
         <dependency>
@@ -30,9 +28,8 @@
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.statemachine</groupId>
-            <artifactId>spring-statemachine-starter</artifactId>
-            <version>${spring-statemachine.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -76,17 +73,6 @@
             <version>${amps_client.version}</version>
         </dependency>
     </dependencies>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.statemachine</groupId>
-                <artifactId>spring-statemachine-bom</artifactId>
-                <version>${spring-statemachine.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <build>
         <plugins>
             <plugin>
