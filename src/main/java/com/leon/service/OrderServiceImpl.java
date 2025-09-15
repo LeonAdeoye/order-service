@@ -20,6 +20,8 @@ public class OrderServiceImpl implements OrderService
     private final Executor dbTaskExecutor;
     @Autowired
     private OrderCache orderCache;
+    @Autowired
+    private InstrumentService instrumentService;
 
      @Override
     public Optional<MessageData> getOrderById(String orderId)
@@ -96,10 +98,11 @@ public class OrderServiceImpl implements OrderService
         Map<String, InsightItem> grouping = new HashMap<>();
         for (MessageData order : orders)
         {
-            String name = switch (insightType == null ? InsightType.UNKNOWN : insightType) {
+            String name = switch (insightType == null ? InsightType.UNKNOWN : insightType)
+            {
                 case CLIENT -> defaultIfBlank(order.getClientCode(), order.getClientDescription());
-                case SECTOR -> defaultIfBlank(order.getInstrumentCode(), "Unknown");
-                case COUNTRY -> defaultIfBlank(order.getSettlementCurrency(), "Unknown");
+                case SECTOR -> defaultIfBlank(instrumentService.getInstrumentSector(order.getInstrumentCode()), order.getInstrumentCode());
+                case COUNTRY -> defaultIfBlank(instrumentService.getInstrumentCountry(order.getInstrumentCode()), order.getSettlementCurrency());
                 case INSTRUMENT -> defaultIfBlank(order.getInstrumentCode(), order.getInstrumentDescription());
                 default -> "Unknown";
             };
